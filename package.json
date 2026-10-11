@@ -1,0 +1,30 @@
+{
+  "name": "vertex-landing",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "studio": "npm --prefix sanity-studio run dev",
+    "studio:build": "npm --prefix sanity-studio run build",
+    "studio:deploy": "npm --prefix sanity-studio run deploy"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.13.5",
+    "@emotion/styled": "^11.13.5",
+    "@sanity/client": "^7.20.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@emotion/babel-plugin": "^11.13.5",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.5"
+  }
+}
