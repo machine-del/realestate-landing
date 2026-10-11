@@ -28,6 +28,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Strip non-linux @typescript native packages from studio lockfile
+        run: |
+          cd sanity-studio
+          node -e '
+            const fs = require("fs");
+            const path = "package-lock.json";
+            const lock = JSON.parse(fs.readFileSync(path, "utf8"));
+            const pkgs = lock.packages || {};
+            const removed = [];
+            for (const key of Object.keys(pkgs)) {
+              if (key.includes("@typescript/typescript-") && !key.includes("linux-x64")) {
+                delete pkgs[key];
+                removed.push(key);
+              }
+            }
+            fs.writeFileSync(path, JSON.stringify(lock, null, 2));
+            console.log("Removed from lockfile:");
+            removed.forEach(r => console.log("  " + r));
+          '
+          cd ..
+
       - name: Install Sanity Studio dependencies
         run: npm ci --prefix sanity-studio --omit=optional
 
