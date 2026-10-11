@@ -29,7 +29,7 @@ jobs:
         run: npm ci
 
       - name: Install Sanity Studio dependencies
-        run: npm ci --prefix sanity-studio
+        run: npm ci --prefix sanity-studio --omit=optional
 
       - name: Build site
         run: npm run build
