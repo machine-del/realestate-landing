@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 import * as UI from "../../shared/ui/StyledElements";
+import { TELEGRAM_CONTACT_URL } from "../../shared/telegram";
 
 const FooterContent = styled(UI.Footer)`
 	padding: 60px 0 40px;
@@ -13,7 +14,7 @@ const FooterGrid = styled.div`
 	margin-bottom: 48px;
 
 	@media (min-width: 768px) {
-		grid-template-columns: 2fr 1fr 1fr;
+		grid-template-columns: 2fr 1fr;
 		gap: 60px;
 	}
 `;
@@ -108,16 +109,12 @@ export function Footer({
 						</FooterBrand>
 						<FooterColumn>
 							<FooterColumnTitle>Связь</FooterColumnTitle>
-							<FooterLink href="https://t.me/" target="_blank" rel="noopener">Telegram</FooterLink>
+							<FooterLink href={TELEGRAM_CONTACT_URL} target="_blank" rel="noopener noreferrer">Telegram</FooterLink>
 							<FooterLink href="https://instagram.com/" target="_blank" rel="noopener">Instagram*</FooterLink>
 							<SocialNotice>
 								Доступ к Telegram может быть ограничен. *Instagram принадлежит Meta Platforms Inc.,
 								признанной экстремистской организацией, деятельность которой запрещена на территории РФ.
 							</SocialNotice>
-						</FooterColumn>
-						<FooterColumn>
-							<FooterColumnTitle>Документы</FooterColumnTitle>
-							<FooterLink href="/privacy">Политика обработки персональных данных</FooterLink>
 						</FooterColumn>
 					</FooterGrid>
 					<FooterBottom>

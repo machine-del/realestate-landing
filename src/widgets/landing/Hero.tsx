@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 import * as UI from "../../shared/ui/StyledElements";
+import { TELEGRAM_CONTACT_URL } from "../../shared/telegram";
 
 const HeroHeroGrid = styled(UI.Div)`		position: relative;
 		z-index: 1;
@@ -310,7 +311,7 @@ export function Hero() {
 							Стратегия, сценарии, съёмка и монтаж коротких видео для риелторов, агентств и экспертов по недвижимости.
 						</UI.Reveal>
 						<UI.Reveal as={HeroHeroActions}>
-							<UI.LargeGoldLink href="#contact">Обсудить проект</UI.LargeGoldLink>
+							<UI.LargeGoldLink href={TELEGRAM_CONTACT_URL} target="_blank" rel="noopener noreferrer">Обсудить проект</UI.LargeGoldLink>
 							<UI.LargeOutlineLink href="#cases">Посмотреть кейсы</UI.LargeOutlineLink>
 						</UI.Reveal>
 						<UI.Reveal as={HeroHeroTrust}>

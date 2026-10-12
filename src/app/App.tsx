@@ -8,11 +8,9 @@ import { Results } from '../widgets/landing/Results';
 import { Sections } from '../widgets/landing/Sections';
 import { Navigation } from '../widgets/navigation/Navigation';
 import { CaseDetailsPage } from '../widgets/landing/CaseDetailsPage';
-import { PrivacyPolicyPage } from '../widgets/landing/PrivacyPolicyPage';
 
 const casePageMatch = window.location.pathname.match(/^\/cases\/([^/]+)\/?$/);
 const caseSlug = casePageMatch ? decodeURIComponent(casePageMatch[1]) : null;
-const isPrivacyPolicyPage = window.location.pathname.replace(/\/+$/, '') === '/privacy';
 
 function GlobalStyles() {
 	return (
@@ -43,9 +41,7 @@ export function App() {
 		<>
 			<GlobalStyles />
 			<LandingStyles>
-				{isPrivacyPolicyPage ? (
-					<PrivacyPolicyPage />
-				) : caseSlug ? (
+				{caseSlug ? (
 					<CaseDetailsPage slug={caseSlug} />
 				) : (
 					<>

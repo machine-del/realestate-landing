@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import * as UI from "../../shared/ui/StyledElements";
+import { TELEGRAM_CONTACT_URL } from "../../shared/telegram";
 
 const NavigationBar = styled(UI.Nav)<{ $scrolled: boolean }>`
 	position: fixed;
@@ -163,7 +164,7 @@ export function Navigation() {
 					<NavLinks>
 						{links.map(([label, href]) => <NavLink href={href} key={href}>{label}</NavLink>)}
 					</NavLinks>
-					<NavCta href="#contact">Обсудить проект</NavCta>
+					<NavCta href={TELEGRAM_CONTACT_URL} target="_blank" rel="noopener noreferrer">Обсудить проект</NavCta>
 					<Burger
 						type="button"
 						aria-label={menuOpen ? "Закрыть меню" : "Меню"}

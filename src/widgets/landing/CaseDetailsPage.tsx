@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import * as UI from "../../shared/ui/StyledElements";
+import { TELEGRAM_CONTACT_URL } from "../../shared/telegram";
 import { sanityClient } from "../../shared/sanity/client";
 import type { CaseStudyDocument } from "../../shared/sanity/types";
 import { Footer } from "./Footer";
@@ -429,7 +430,7 @@ function CaseDetailContent({ item }: { item: CaseStudyDocument }) {
 					<Aside>
 						<AsideTitle>Хотите такой же результат?</AsideTitle>
 						<AsideText>Обсудим вашу задачу и подберём подходящий формат работы.</AsideText>
-						<AsideAction href="/#contact">Обсудить проект</AsideAction>
+						<AsideAction href={TELEGRAM_CONTACT_URL} target="_blank" rel="noopener noreferrer">Обсудить проект</AsideAction>
 					</Aside>
 				</DetailContent>
 			</UI.Container>
