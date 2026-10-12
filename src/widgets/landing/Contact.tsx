@@ -1,6 +1,30 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import styled from "@emotion/styled";
 import * as UI from "../../shared/ui/StyledElements";
+
+const COOLDOWN_STORAGE_KEY = "contact-form-cooldown-until";
+const SUBMITTED_STORAGE_KEY = "contact-form-submitted-until";
+const COOLDOWN_DURATION_MS = 60_000;
+
+function readStoredTimestamp(key: string) {
+	try {
+		const storedValue = Number(localStorage.getItem(key));
+		return Number.isFinite(storedValue) && storedValue > Date.now() ? storedValue : 0;
+	} catch {
+		return 0;
+	}
+}
+
+function readCooldownUntil() {
+	return readStoredTimestamp(COOLDOWN_STORAGE_KEY);
+}
+
+function formatRemainingTime(milliseconds: number) {
+	const totalSeconds = Math.ceil(milliseconds / 1000);
+	const minutes = Math.floor(totalSeconds / 60);
+	const seconds = totalSeconds % 60;
+	return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
 
 const ContactSection = styled(UI.Section)`
 	padding: 48px 0 132px;
@@ -155,12 +179,162 @@ const FormStatus = styled(UI.Paragraph)`
 	line-height: 1.5;
 `;
 
+const ConsentField = styled.label`
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	color: var(--text-muted);
+	font-size: 12px;
+	line-height: 1.6;
+`;
+
+const ConsentCheckbox = styled.input`
+	flex: 0 0 auto;
+	width: 16px;
+	height: 16px;
+	margin: 2px 0 0;
+	accent-color: var(--gold);
+`;
+
+const ConsentLink = styled.a`
+	color: var(--gold);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+`;
+
 export function Contact() {
 	const [formStatus, setFormStatus] = useState("");
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [cooldownUntil, setCooldownUntil] = useState(readCooldownUntil);
+	const [submittedUntil, setSubmittedUntil] = useState(() =>
+		readStoredTimestamp(SUBMITTED_STORAGE_KEY),
+	);
+	const [currentTime, setCurrentTime] = useState(Date.now());
+	const submittingRef = useRef(false);
+	const remainingCooldown = Math.max(0, cooldownUntil - currentTime);
+	const remainingSubmittedTime = Math.max(0, submittedUntil - currentTime);
 
-	function handleSubmit(event: FormEvent<HTMLFormElement>) {
+	useEffect(() => {
+		function syncCooldownFromStorage() {
+			const storedCooldownUntil = readCooldownUntil();
+			setCooldownUntil(storedCooldownUntil);
+			setSubmittedUntil(readStoredTimestamp(SUBMITTED_STORAGE_KEY));
+			setCurrentTime(Date.now());
+		}
+
+		if (remainingCooldown === 0 && remainingSubmittedTime === 0) {
+			if (cooldownUntil > 0 || submittedUntil > 0) {
+				setCooldownUntil(0);
+				setSubmittedUntil(0);
+				try {
+					localStorage.removeItem(COOLDOWN_STORAGE_KEY);
+					localStorage.removeItem(SUBMITTED_STORAGE_KEY);
+				} catch {
+					// Storage may be unavailable; the in-memory cooldown still expires normally.
+				}
+			}
+		} else {
+			const timer = window.setInterval(() => setCurrentTime(Date.now()), 1000);
+			window.addEventListener("storage", syncCooldownFromStorage);
+			window.addEventListener("focus", syncCooldownFromStorage);
+			return () => {
+				window.clearInterval(timer);
+				window.removeEventListener("storage", syncCooldownFromStorage);
+				window.removeEventListener("focus", syncCooldownFromStorage);
+			};
+		}
+
+		window.addEventListener("storage", syncCooldownFromStorage);
+		window.addEventListener("focus", syncCooldownFromStorage);
+		return () => {
+			window.removeEventListener("storage", syncCooldownFromStorage);
+			window.removeEventListener("focus", syncCooldownFromStorage);
+		};
+	}, [cooldownUntil, remainingCooldown, remainingSubmittedTime, submittedUntil]);
+
+	function startCooldown() {
+		const expiresAt = Date.now() + COOLDOWN_DURATION_MS;
+		setCooldownUntil(expiresAt);
+		setCurrentTime(Date.now());
+		try {
+			localStorage.setItem(COOLDOWN_STORAGE_KEY, String(expiresAt));
+		} catch {
+			// Storage may be unavailable; the in-memory cooldown still applies until reload.
+		}
+		return expiresAt;
+	}
+
+	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		setFormStatus("Форма пока не подключена к отправке. Данные не отправлены.");
+		const storedCooldownUntil = readCooldownUntil();
+		if (submittingRef.current || Date.now() < Math.max(cooldownUntil, storedCooldownUntil)) {
+			setCooldownUntil(Math.max(cooldownUntil, storedCooldownUntil));
+			setCurrentTime(Date.now());
+			return;
+		}
+
+		submittingRef.current = true;
+		setIsSubmitting(true);
+		setFormStatus("");
+		const expiresAt = startCooldown();
+
+		const form = event.currentTarget;
+		const formData = new FormData(form);
+		const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+		try {
+			const response = await fetch(`${apiUrl}/contact`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					name: formData.get("name"),
+					contact: formData.get("contact"),
+					comment: formData.get("comment"),
+					personalDataConsent: formData.get("personalDataConsent") === "on",
+				}),
+			});
+
+			if (!response.ok) {
+				const result: unknown = await response.json().catch(() => null);
+				const serverMessage =
+					typeof result === "object" &&
+					result !== null &&
+					"message" in result &&
+					typeof result.message === "string"
+						? result.message
+						: "";
+				setFormStatus(
+					response.status === 429
+						? serverMessage || "Заявку можно отправлять не чаще одного раза в минуту."
+						: serverMessage || "Не удалось отправить заявку. Попробуйте ещё раз позже.",
+				);
+				return;
+			}
+
+			const result: unknown = await response.json().catch(() => null);
+			const serverMessage =
+				typeof result === "object" &&
+				result !== null &&
+				"message" in result &&
+				typeof result.message === "string"
+					? result.message
+					: "Заявка отправлена.";
+			setSubmittedUntil(expiresAt);
+			try {
+				localStorage.setItem(SUBMITTED_STORAGE_KEY, String(expiresAt));
+			} catch {
+				// Storage may be unavailable; the submitted state remains until the page reloads.
+			}
+			form.reset();
+			setFormStatus(serverMessage);
+		} catch {
+			setFormStatus(
+				"Не удалось связаться с сервером. Повторная отправка будет доступна через минуту.",
+			);
+		} finally {
+			submittingRef.current = false;
+			setIsSubmitting(false);
+		}
 	}
 
 	return (
@@ -196,7 +370,28 @@ export function Contact() {
 							Комментарий
 							<FieldTextarea name="comment" placeholder="Коротко расскажите о проекте и задаче" rows={4} />
 						</Field>
-						<SubmitButton type="submit">Обсудить проект</SubmitButton>
+						<ConsentField>
+							<ConsentCheckbox name="personalDataConsent" type="checkbox" required />
+							<span>
+								Согласен на обработку персональных данных в соответствии с{" "}
+								<ConsentLink href="/privacy" target="_blank" rel="noopener noreferrer">
+									Политикой обработки персональных данных
+								</ConsentLink>
+								.
+							</span>
+						</ConsentField>
+						{remainingSubmittedTime === 0 && (
+							<SubmitButton
+								type="submit"
+								disabled={isSubmitting || remainingCooldown > 0}
+							>
+								{isSubmitting
+									? "Отправляем..."
+									: remainingCooldown > 0
+										? `Повторно через ${formatRemainingTime(remainingCooldown)}`
+										: "Обсудить проект"}
+							</SubmitButton>
+						)}
 						<FormNotice>
 							Доступ к Telegram может быть ограничен. Укажите телефон или другой удобный способ связи.
 						</FormNotice>

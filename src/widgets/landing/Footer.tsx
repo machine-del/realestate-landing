@@ -36,13 +36,6 @@ const FooterLogo = styled(UI.Anchor)`
 	text-decoration: none;
 `;
 
-const FooterLogoDot = styled.span`
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-	background: var(--gold);
-`;
-
 const FooterBrandText = styled(UI.Paragraph)`
 	max-width: 300px;
 	color: var(--text-muted);
@@ -110,7 +103,7 @@ export function Footer({
 				<UI.Container>
 					<FooterGrid>
 						<FooterBrand>
-							<FooterLogo href={homeHref}><FooterLogoDot />VERTEX</FooterLogo>
+							<FooterLogo href={homeHref}>VERTEX</FooterLogo>
 							<FooterBrandText>Контент и маркетинг для рынка недвижимости.</FooterBrandText>
 						</FooterBrand>
 						<FooterColumn>
@@ -124,7 +117,7 @@ export function Footer({
 						</FooterColumn>
 						<FooterColumn>
 							<FooterColumnTitle>Документы</FooterColumnTitle>
-							<FooterLink href="#">Политика конфиденциальности</FooterLink>
+							<FooterLink href="/privacy">Политика обработки персональных данных</FooterLink>
 						</FooterColumn>
 					</FooterGrid>
 					<FooterBottom>
