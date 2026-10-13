@@ -110,10 +110,12 @@ export function Footer({
 						<FooterColumn>
 							<FooterColumnTitle>Связь</FooterColumnTitle>
 							<FooterLink href={TELEGRAM_CONTACT_URL} target="_blank" rel="noopener noreferrer">Telegram</FooterLink>
-							<FooterLink href="https://instagram.com/" target="_blank" rel="noopener">Instagram*</FooterLink>
+							<FooterLink href="https://instagram.com/and_chernenko?dlrf=b2JuNXZnMTNiaHYy&utm_source=qr" target="_blank" rel="noopener noreferrer">Instagram*</FooterLink>
+							<FooterLink href="https://wa.me/79082495017" target="_blank" rel="noopener noreferrer">WhatsApp*</FooterLink>
 							<SocialNotice>
-								Доступ к Telegram может быть ограничен. *Instagram принадлежит Meta Platforms Inc.,
-								признанной экстремистской организацией, деятельность которой запрещена на территории РФ.
+								Доступность Telegram в России может быть ограничена. *Instagram и WhatsApp принадлежат
+								Meta Platforms Inc., признанной в России экстремистской организацией, деятельность
+								которой запрещена на территории РФ.
 							</SocialNotice>
 						</FooterColumn>
 					</FooterGrid>
