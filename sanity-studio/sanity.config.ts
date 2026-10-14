@@ -5,7 +5,7 @@ import {schemaTypes} from './schemaTypes'
 
 export default defineConfig({
   name: 'vertex',
-  title: 'VERTEX — кейсы',
+  title: 'CONTENT PORT — кейсы',
 
   projectId: 'j2snaqzy',
   dataset: 'production',

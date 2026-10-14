@@ -22,6 +22,14 @@ export const caseStudy = defineType({
       name: 'category',
       title: 'Категория',
       type: 'string',
+      options: {
+        list: [
+          {title: 'Instagram', value: 'Instagram'},
+          {title: 'TikTok', value: 'TikTok'},
+          {title: 'Reels', value: 'Reels'},
+        ],
+        layout: 'radio',
+      },
       validation: (rule) => rule.required(),
     }),
     defineField({
@@ -141,8 +149,8 @@ export const caseStudy = defineType({
     }),
     defineField({
       name: 'statisticsScreenshots',
-      title: 'Скриншоты статистики',
-      description: 'Подтверждающие результат скриншоты.',
+      title: 'Скриншоты результатов',
+      description: 'Загрузите скриншоты с показателями проекта: охваты, просмотры, подписчики, заявки и другие результаты.',
       type: 'array',
       of: [{type: 'image', options: {hotspot: true}}],
     }),
@@ -153,9 +161,11 @@ export const caseStudy = defineType({
       rows: 4,
     }),
     defineField({
-      name: 'testimonialAuthor',
-      title: 'Автор отзыва',
-      type: 'string',
+      name: 'testimonialImages',
+      title: 'Изображения к отзыву',
+      description: 'Необязательные изображения или скриншоты, приложенные к отзыву.',
+      type: 'array',
+      of: [{type: 'image', options: {hotspot: true}}],
     }),
     defineField({
       name: 'conclusion',

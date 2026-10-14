@@ -1,6 +1,6 @@
-# VERTEX case-study CMS
+# CONTENT PORT case-study CMS
 
-This separate Sanity Studio manages the case studies shown on the VERTEX landing page. It connects to project `j2snaqzy` and the `production` dataset.
+This separate Sanity Studio manages the case studies shown on the CONTENT PORT landing page. It connects to project `j2snaqzy` and the `production` dataset.
 
 ## Run locally
 

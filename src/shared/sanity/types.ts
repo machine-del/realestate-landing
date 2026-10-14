@@ -20,6 +20,6 @@ export interface CaseStudyDocument {
 	contentExamples?: Array<{ title: string; url: string; imageUrl?: string }>;
 	statisticsScreenshots?: string[];
 	testimonial?: string;
-	testimonialAuthor?: string;
+	testimonialImages?: string[];
 	order: number;
 }

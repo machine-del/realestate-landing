@@ -6,6 +6,8 @@ import { sanityClient } from "../../shared/sanity/client";
 import type { CaseStudyDocument } from "../../shared/sanity/types";
 import { Footer } from "./Footer";
 
+const overlayZIndex = 1000;
+
 const CaseHeader = styled.header`
 	position: relative;
 	z-index: 2;
@@ -22,10 +24,14 @@ const CaseHeaderInner = styled(UI.Container)`
 
 const CaseLogo = styled(UI.Anchor)`
 	color: var(--text);
-	font-size: 20px;
+	font-size: 30px;
 	font-weight: 800;
 	letter-spacing: -0.02em;
 	text-decoration: none;
+
+	@media (max-width: 480px) {
+		font-size: 20px;
+	}
 `;
 
 const BackLink = styled(UI.OutlineLink)`
@@ -84,33 +90,93 @@ const MetricsGrid = styled.div`
 	@media (min-width: 600px) {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
-
-	@media (min-width: 900px) {
-		grid-template-columns: repeat(4, minmax(0, 1fr));
-	}
 `;
 
 const MetricCard = styled.div`
-	padding: 20px;
-	border: 1px solid var(--gold-line);
+	display: flex;
+	min-height: 128px;
+	flex-direction: column;
+	justify-content: space-between;
+	padding: 20px 22px;
+	border: 1px solid var(--border);
 	border-radius: var(--radius-sm);
-	background: var(--gold-soft);
+	background: linear-gradient(145deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01));
+`;
+
+const MetricLabel = styled.span`
+	color: var(--text-dim);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
 `;
 
 const MetricValue = styled.strong`
 	display: block;
-	margin-bottom: 6px;
-	color: var(--gold);
-	font-size: clamp(24px, 3vw, 34px);
-	font-weight: 800;
-	line-height: 1.1;
+	color: var(--text);
+	font-size: clamp(25px, 3vw, 36px);
+	font-weight: 700;
+	line-height: 1.05;
 	letter-spacing: -0.04em;
 	overflow-wrap: anywhere;
 `;
 
-const MetricLabel = styled.span`
-	color: var(--text-muted);
+const OutcomePanel = styled.div`
+	margin-top: 44px;
+`;
+
+const GrowthCard = styled.div`
+	padding: 22px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: linear-gradient(145deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01));
+
+	@media (min-width: 600px) {
+		padding: 26px 28px;
+	}
+`;
+
+const GrowthLabel = styled.div`
+	margin-bottom: 26px;
+	color: var(--text-dim);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.09em;
+	text-transform: uppercase;
+`;
+
+const GrowthValues = styled.div`
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
+	align-items: end;
+	gap: 12px;
+`;
+
+const GrowthValueGroup = styled.div`
+	min-width: 0;
+`;
+
+const GrowthValueLabel = styled.div`
+	margin-bottom: 8px;
+	color: var(--text-dim);
 	font-size: 12px;
+`;
+
+const GrowthValue = styled.strong<{ $highlight?: boolean }>`
+	display: block;
+	color: ${({ $highlight }) => ($highlight ? "var(--gold)" : "var(--text)")};
+	font-size: clamp(27px, 4vw, 42px);
+	font-weight: 750;
+	line-height: 1;
+	letter-spacing: -0.045em;
+	overflow-wrap: anywhere;
+`;
+
+const GrowthArrow = styled.span`
+	padding-bottom: 5px;
+	color: var(--gold);
+	font-size: 22px;
+	text-align: center;
 `;
 
 const DetailCover = styled.img`
@@ -201,6 +267,10 @@ const MediaGrid = styled.div`
 	}
 `;
 
+const TestimonialImages = styled(MediaGrid)`
+	margin-top: 16px;
+`;
+
 const MediaLink = styled.a`
 	position: relative;
 	display: flex;
@@ -260,15 +330,6 @@ const Testimonial = styled.blockquote`
 	white-space: pre-line;
 `;
 
-const TestimonialAuthor = styled.cite`
-	display: block;
-	margin-top: 18px;
-	color: var(--text);
-	font-size: 13px;
-	font-style: normal;
-	font-weight: 600;
-`;
-
 const Aside = styled.aside`
 	align-self: start;
 	padding: 24px;
@@ -321,7 +382,7 @@ function DetailHeader() {
 	return (
 		<CaseHeader>
 			<CaseHeaderInner>
-				<CaseLogo href="/">VERTEX</CaseLogo>
+				<CaseLogo href="/">CONTENT PORT</CaseLogo>
 				<BackLink href="/#cases">Все кейсы</BackLink>
 			</CaseHeaderInner>
 		</CaseHeader>
@@ -329,13 +390,6 @@ function DetailHeader() {
 }
 
 function CaseDetailContent({ item }: { item: CaseStudyDocument }) {
-	const stats = item.resultStats?.length
-		? item.resultStats
-		: [
-				{ label: item.metricLabel, value: `${item.growthFrom} → ${item.growthTo}` },
-				{ label: "Итоговый показатель", value: item.metricValue },
-			];
-
 	return (
 		<>
 			<DetailHero>
@@ -344,14 +398,33 @@ function CaseDetailContent({ item }: { item: CaseStudyDocument }) {
 					<DetailTitle>{item.title}</DetailTitle>
 					{item.clientName && <DetailClient>Клиент: {item.clientName}</DetailClient>}
 					<DetailTask>{item.task || item.description}</DetailTask>
-					<MetricsGrid>
-						{stats.map((stat) => (
-							<MetricCard key={`${stat.label}-${stat.value}`}>
-								<MetricValue>{stat.value}</MetricValue>
-								<MetricLabel>{stat.label}</MetricLabel>
-							</MetricCard>
-						))}
-					</MetricsGrid>
+					{item.resultStats?.length ? (
+						<MetricsGrid>
+							{item.resultStats.map((stat) => (
+								<MetricCard key={`${stat.label}-${stat.value}`}>
+									<MetricLabel>{stat.label}</MetricLabel>
+									<MetricValue>{stat.value}</MetricValue>
+								</MetricCard>
+							))}
+						</MetricsGrid>
+					) : (
+						<OutcomePanel>
+							<GrowthCard>
+								<GrowthLabel>{item.metricLabel}</GrowthLabel>
+								<GrowthValues>
+									<GrowthValueGroup>
+										<GrowthValueLabel>До начала работы</GrowthValueLabel>
+										<GrowthValue>{item.growthFrom}</GrowthValue>
+									</GrowthValueGroup>
+									<GrowthArrow aria-hidden="true">→</GrowthArrow>
+									<GrowthValueGroup>
+										<GrowthValueLabel>После работы</GrowthValueLabel>
+										<GrowthValue $highlight>{item.growthTo}</GrowthValue>
+									</GrowthValueGroup>
+								</GrowthValues>
+							</GrowthCard>
+						</OutcomePanel>
+					)}
 					{item.thumbnailUrl && <DetailCover src={item.thumbnailUrl} alt={`Кейс ${item.title}`} />}
 				</UI.Container>
 			</DetailHero>
@@ -397,7 +470,7 @@ function CaseDetailContent({ item }: { item: CaseStudyDocument }) {
 						) : null}
 						{item.statisticsScreenshots?.length ? (
 							<DetailSection>
-								<DetailSectionTitle>Статистика</DetailSectionTitle>
+								<DetailSectionTitle>Результаты в цифрах</DetailSectionTitle>
 								<MediaGrid>
 									{item.statisticsScreenshots.map((src, index) => (
 										<Screenshot src={src} alt={`Скриншот статистики ${index + 1}`} loading="lazy" key={src} />
@@ -405,13 +478,22 @@ function CaseDetailContent({ item }: { item: CaseStudyDocument }) {
 								</MediaGrid>
 							</DetailSection>
 						) : null}
-						{item.testimonial && (
+						{Boolean(item.testimonial || item.testimonialImages?.length) && (
 							<DetailSection>
 								<DetailSectionTitle>Отзыв клиента</DetailSectionTitle>
-								<Testimonial>
-									{item.testimonial}
-									{item.testimonialAuthor && <TestimonialAuthor>{item.testimonialAuthor}</TestimonialAuthor>}
-								</Testimonial>
+								{item.testimonial && <Testimonial>{item.testimonial}</Testimonial>}
+								{item.testimonialImages?.length ? (
+									<TestimonialImages>
+										{item.testimonialImages.map((src, index) => (
+											<Screenshot
+												src={src}
+												alt={`Изображение к отзыву ${index + 1}`}
+												loading="lazy"
+												key={src}
+											/>
+										))}
+									</TestimonialImages>
+								) : null}
 							</DetailSection>
 						)}
 						{item.conclusion && (
@@ -469,7 +551,7 @@ export function CaseDetailsPage({ slug }: { slug: string }) {
 					contentExamples[] { title, url, "imageUrl": image.asset->url },
 					"statisticsScreenshots": statisticsScreenshots[].asset->url,
 					testimonial,
-					testimonialAuthor,
+					"testimonialImages": testimonialImages[].asset->url,
 					order
 				}`,
 				{ slug },

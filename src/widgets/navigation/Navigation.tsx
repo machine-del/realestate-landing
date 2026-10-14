@@ -32,10 +32,14 @@ const Logo = styled(UI.Anchor)`
 	align-items: center;
 	gap: 8px;
 	color: var(--text);
-	font-size: 20px;
+	font-size: 30px;
 	font-weight: 800;
 	letter-spacing: -0.02em;
 	text-decoration: none;
+
+	@media (max-width: 480px) {
+		font-size: 20px;
+	}
 `;
 
 const NavLinks = styled.nav`
@@ -160,7 +164,7 @@ export function Navigation() {
 		<>
 			<NavigationBar $scrolled={scrolled}>
 				<NavInner>
-					<Logo href="#">VERTEX</Logo>
+					<Logo href="#">CONTENT PORT</Logo>
 					<NavLinks>
 						{links.map(([label, href]) => <NavLink href={href} key={href}>{label}</NavLink>)}
 					</NavLinks>

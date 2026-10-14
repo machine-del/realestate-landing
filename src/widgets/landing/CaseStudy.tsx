@@ -228,7 +228,7 @@ function caseStudyQuery() {
 		contentExamples[] { title, url, "imageUrl": image.asset->url },
 		"statisticsScreenshots": statisticsScreenshots[].asset->url,
 		testimonial,
-		testimonialAuthor,
+		"testimonialImages": testimonialImages[].asset->url,
 		order
 	}`;
 }
