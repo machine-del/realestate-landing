@@ -13,6 +13,7 @@ const ProcessNumber = styled.div`
 	font-size: 13px;
 	font-weight: 600;
 	letter-spacing: 0.1em;
+	transition: transform 0.45s var(--ease);
 `;
 
 const ProcessTitle = styled(UI.H3)`
@@ -31,6 +32,7 @@ const ProcessDescription = styled(UI.Paragraph)`
 const ProcessBody = styled.div`
 	display: flex;
 	flex-direction: column;
+	transition: transform 0.45s var(--ease);
 `;
 
 const ProcessItem = styled.div`
@@ -40,19 +42,28 @@ const ProcessItem = styled.div`
 	gap: 20px;
 	padding: 28px 0;
 	border-bottom: 1px solid var(--border);
-	transition: all 0.4s var(--ease);
 
 	&:first-of-type {
 		border-top: 1px solid var(--border);
 	}
 
-	&:hover {
-		padding-left: 12px;
+	&:hover ${ProcessNumber},
+	&:hover ${ProcessBody},
+	&:focus-within ${ProcessNumber},
+	&:focus-within ${ProcessBody} {
+		transform: translateX(12px);
 	}
 
 	@media (min-width: 768px) {
 		grid-template-columns: 120px 1fr;
 		padding: 32px 0;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		${ProcessNumber},
+		${ProcessBody} {
+			transition: none;
+		}
 	}
 `;
 

@@ -216,7 +216,7 @@ export function Reveal({ as = "div", children, id: suppliedId }: RevealProps) {
 	}, [id, visible]);
 
 	return (
-		<RevealElement as={as} id={id} $visible={visible}>
+		<RevealElement as={as} id={id} $visible={visible} onFocusCapture={() => setVisible(true)}>
 			{children}
 		</RevealElement>
 	);

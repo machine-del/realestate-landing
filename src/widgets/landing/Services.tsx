@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import * as UI from "../../shared/ui/StyledElements";
-import { TELEGRAM_CONTACT_URL } from "../../shared/telegram";
+import { createTelegramContactUrl } from "../../shared/telegram";
 
 const ServicesGrid = styled.div`
 	display: grid;
@@ -104,7 +104,7 @@ const services = [
 	{
 		title: "Контент под ключ",
 		items: ["Стратегия", "Сценарии", "Съёмка", "Монтаж", "Контент-план"],
-		href: TELEGRAM_CONTACT_URL,
+		href: createTelegramContactUrl("Здравствуйте! Хочу обсудить проект по контенту под ключ."),
 		label: "Обсудить проект",
 		featured: true,
 		icon: <><UI.Polygon points="23 7 16 12 23 17 23 7" /><UI.Rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></>,
@@ -112,14 +112,14 @@ const services = [
 	{
 		title: "Сценарии для Reels",
 		items: ["Исследование тем", "Идеи", "Сценарии", "Hooks", "Адаптация под эксперта"],
-		href: TELEGRAM_CONTACT_URL,
+		href: createTelegramContactUrl("Здравствуйте! Интересуют сценарии для Reels. Хочу обсудить задачу и узнать условия."),
 		label: "Получить сценарии",
 		icon: <><UI.Path d="M12 19l7-7 3 3-7 7-3-3z" /><UI.Path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z" /><UI.Path d="M2 2l7.586 7.586" /><UI.Circle cx="11" cy="11" r="2" /></>,
 	},
 	{
 		title: "Контент-система",
 		items: ["Стратегия продвижения", "Контент-матрица", "Серии Reels", "Аналитика", "Масштабирование контента"],
-		href: TELEGRAM_CONTACT_URL,
+		href: createTelegramContactUrl("Здравствуйте! Хочу обсудить контент-систему для моего проекта."),
 		label: "Обсудить стратегию",
 		icon: <><UI.Line x1="18" y1="20" x2="18" y2="10" /><UI.Line x1="12" y1="20" x2="12" y2="4" /><UI.Line x1="6" y1="20" x2="6" y2="14" /></>,
 	},

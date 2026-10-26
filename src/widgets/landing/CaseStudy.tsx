@@ -160,22 +160,58 @@ const CaseResultLabel = styled.span`
 	line-height: 1.35;
 `;
 
+const CaseGrowth = styled.div`
+	display: grid;
+	width: 100%;
+	grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 18px;
+	padding: 14px 16px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: rgba(255, 255, 255, 0.025);
+`;
+
+const CaseGrowthItem = styled.div`
+	min-width: 0;
+`;
+
+const CaseGrowthLabel = styled.span`
+	display: block;
+	margin-bottom: 5px;
+	color: var(--text-dim);
+	font-size: 9px;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+`;
+
+const CaseGrowthValue = styled.strong<{ $highlight?: boolean }>`
+	display: block;
+	color: ${({ $highlight }) => ($highlight ? "var(--gold)" : "var(--text-muted)")};
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+`;
+
+const CaseGrowthArrow = styled.span`
+	color: var(--gold);
+	font-size: 18px;
+	text-align: center;
+`;
+
 const CaseActions = styled.div`
 	display: flex;
 	width: 100%;
 	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
+	justify-content: flex-start;
 `;
 
 const CaseAction = styled(UI.GoldLink)`
 	padding: 11px 20px;
 	font-size: 14px;
-`;
-
-const CaseActionHint = styled.span`
-	color: var(--text-dim);
-	font-size: 11px;
 `;
 
 const CaseEmptyState = styled.div`
@@ -223,7 +259,7 @@ function caseStudyQuery() {
 		workDone,
 		conclusion,
 		details,
-		resultStats[] { label, value },
+		resultStats[] { metricType, customLabel, label, value },
 		"thumbnailUrl": thumbnail.asset->url,
 		contentExamples[] { title, url, "imageUrl": image.asset->url },
 		"statisticsScreenshots": statisticsScreenshots[].asset->url,
@@ -293,11 +329,23 @@ export function CaseStudy() {
 									<CaseResultValue>{item.metricValue}</CaseResultValue>
 									<CaseResultLabel>{item.metricLabel}</CaseResultLabel>
 								</CaseResult>
+								{(item.growthFrom || item.growthTo) && (
+									<CaseGrowth aria-label="Изменение показателя">
+										<CaseGrowthItem>
+											<CaseGrowthLabel>Было</CaseGrowthLabel>
+											<CaseGrowthValue>{item.growthFrom || "—"}</CaseGrowthValue>
+										</CaseGrowthItem>
+										<CaseGrowthArrow aria-hidden="true">→</CaseGrowthArrow>
+										<CaseGrowthItem>
+											<CaseGrowthLabel>Стало</CaseGrowthLabel>
+											<CaseGrowthValue $highlight>{item.growthTo || "—"}</CaseGrowthValue>
+										</CaseGrowthItem>
+									</CaseGrowth>
+								)}
 								<CaseActions>
 									<CaseAction href={`/cases/${encodeURIComponent(item.slug || item._id)}`}>
 										Подробнее
 									</CaseAction>
-									<CaseActionHint>{item.growthFrom} → {item.growthTo}</CaseActionHint>
 								</CaseActions>
 							</CaseBody>
 						</UI.Reveal>

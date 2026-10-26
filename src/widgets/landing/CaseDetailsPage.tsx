@@ -4,9 +4,27 @@ import * as UI from "../../shared/ui/StyledElements";
 import { TELEGRAM_CONTACT_URL } from "../../shared/telegram";
 import { sanityClient } from "../../shared/sanity/client";
 import type { CaseStudyDocument } from "../../shared/sanity/types";
+import { usePageMetadata } from "../../shared/usePageMetadata";
 import { Footer } from "./Footer";
 
 const overlayZIndex = 1000;
+
+const CaseSkipLink = styled(UI.Anchor)`
+	position: absolute;
+	top: -64px;
+	left: 12px;
+	z-index: ${overlayZIndex + 1};
+	padding: 10px 16px;
+	border-radius: var(--radius-sm);
+	background: var(--gold);
+	color: #0a0a0a;
+	font-weight: 600;
+	text-decoration: none;
+
+	&:focus {
+		top: 12px;
+	}
+`;
 
 const CaseHeader = styled.header`
 	position: relative;
@@ -136,24 +154,24 @@ const GrowthCard = styled.div`
 	}
 `;
 
-const GrowthLabel = styled.div`
-	margin-bottom: 26px;
-	color: var(--text-dim);
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.09em;
-	text-transform: uppercase;
-`;
-
 const GrowthValues = styled.div`
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
-	align-items: end;
+	grid-template-columns: minmax(0, 1fr);
+	align-items: center;
 	gap: 12px;
+
+	@media (min-width: 600px) {
+		grid-template-columns: minmax(0, 1fr) 32px minmax(0, 1fr);
+		align-items: end;
+	}
 `;
 
 const GrowthValueGroup = styled.div`
 	min-width: 0;
+
+	@media (max-width: 599px) {
+		text-align: center;
+	}
 `;
 
 const GrowthValueLabel = styled.div`
@@ -165,11 +183,15 @@ const GrowthValueLabel = styled.div`
 const GrowthValue = styled.strong<{ $highlight?: boolean }>`
 	display: block;
 	color: ${({ $highlight }) => ($highlight ? "var(--gold)" : "var(--text)")};
-	font-size: clamp(27px, 4vw, 42px);
+	font-size: clamp(24px, 4vw, 42px);
 	font-weight: 750;
-	line-height: 1;
+	line-height: 1.15;
 	letter-spacing: -0.045em;
-	overflow-wrap: anywhere;
+	overflow-wrap: break-word;
+
+	@media (max-width: 599px) {
+		font-size: clamp(22px, 7vw, 30px);
+	}
 `;
 
 const GrowthArrow = styled.span`
@@ -177,16 +199,54 @@ const GrowthArrow = styled.span`
 	color: var(--gold);
 	font-size: 22px;
 	text-align: center;
+
+	@media (max-width: 599px) {
+		padding: 0;
+		transform: rotate(90deg);
+	}
 `;
 
-const DetailCover = styled.img`
-	display: block;
+const DetailCoverFrame = styled.div`
+	position: relative;
+	display: flex;
 	width: 100%;
-	max-height: 560px;
+	height: clamp(360px, 48vw, 560px);
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
 	margin-top: 48px;
 	border: 1px solid var(--border);
 	border-radius: var(--radius);
+	background: #101012;
+
+	@media (max-width: 600px) {
+		height: min(120vw, 480px);
+		min-height: 340px;
+		margin-top: 32px;
+		border-radius: var(--radius-sm);
+	}
+`;
+
+const DetailCoverBackdrop = styled.img`
+	position: absolute;
+	inset: -20px;
+	width: calc(100% + 40px);
+	height: calc(100% + 40px);
 	object-fit: cover;
+	filter: blur(22px);
+	opacity: 0.24;
+	transform: scale(1.05);
+`;
+
+const DetailCover = styled.img`
+	position: relative;
+	z-index: 1;
+	display: block;
+	width: 100%;
+	height: 100%;
+	padding: 12px;
+	object-fit: contain;
+	filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.4));
 `;
 
 const DetailContent = styled.div`
@@ -378,18 +438,30 @@ const ErrorText = styled.p`
 	line-height: 1.6;
 `;
 
+const PreviewNotice = styled.div`
+	padding: 10px 16px;
+	background: var(--gold-soft);
+	color: var(--gold);
+	font-size: 12px;
+	font-weight: 600;
+	text-align: center;
+`;
+
 function DetailHeader() {
 	return (
-		<CaseHeader>
-			<CaseHeaderInner>
-				<CaseLogo href="/">CONTENT PORT</CaseLogo>
-				<BackLink href="/#cases">Все кейсы</BackLink>
-			</CaseHeaderInner>
-		</CaseHeader>
+		<>
+			<CaseSkipLink href="#case-content">Перейти к содержимому</CaseSkipLink>
+			<CaseHeader>
+				<CaseHeaderInner>
+					<CaseLogo href="/">CONTENT PORT</CaseLogo>
+					<BackLink href="/#cases">Все кейсы</BackLink>
+				</CaseHeaderInner>
+			</CaseHeader>
+		</>
 	);
 }
 
-function CaseDetailContent({ item }: { item: CaseStudyDocument }) {
+function CaseDetailContent({ item, showFullPreview }: { item: CaseStudyDocument; showFullPreview: boolean }) {
 	return (
 		<>
 			<DetailHero>
@@ -401,16 +473,20 @@ function CaseDetailContent({ item }: { item: CaseStudyDocument }) {
 					{item.resultStats?.length ? (
 						<MetricsGrid>
 							{item.resultStats.map((stat) => (
-								<MetricCard key={`${stat.label}-${stat.value}`}>
-									<MetricLabel>{stat.label}</MetricLabel>
+								<MetricCard key={`${stat.metricType || stat.label}-${stat.value}`}>
+									<MetricLabel>
+										{stat.metricType === "Другое"
+											? stat.customLabel || stat.label || "Другое"
+											: stat.metricType || stat.label || "Показатель"}
+									</MetricLabel>
 									<MetricValue>{stat.value}</MetricValue>
 								</MetricCard>
 							))}
 						</MetricsGrid>
-					) : (
+					) : null}
+					{(!item.resultStats?.length || showFullPreview) && (
 						<OutcomePanel>
 							<GrowthCard>
-								<GrowthLabel>{item.metricLabel}</GrowthLabel>
 								<GrowthValues>
 									<GrowthValueGroup>
 										<GrowthValueLabel>До начала работы</GrowthValueLabel>
@@ -425,7 +501,12 @@ function CaseDetailContent({ item }: { item: CaseStudyDocument }) {
 							</GrowthCard>
 						</OutcomePanel>
 					)}
-					{item.thumbnailUrl && <DetailCover src={item.thumbnailUrl} alt={`Кейс ${item.title}`} />}
+					{item.thumbnailUrl && (
+						<DetailCoverFrame>
+							<DetailCoverBackdrop src={item.thumbnailUrl} alt="" aria-hidden="true" />
+							<DetailCover src={item.thumbnailUrl} alt={`Обложка кейса: ${item.title}`} />
+						</DetailCoverFrame>
+					)}
 				</UI.Container>
 			</DetailHero>
 			<UI.Container>
@@ -520,12 +601,25 @@ function CaseDetailContent({ item }: { item: CaseStudyDocument }) {
 	);
 }
 
-export function CaseDetailsPage({ slug }: { slug: string }) {
-	const [item, setItem] = useState<CaseStudyDocument | null>(null);
-	const [loading, setLoading] = useState(true);
+export function CaseDetailsPage({ slug, previewItem }: { slug: string; previewItem?: CaseStudyDocument }) {
+	const [item, setItem] = useState<CaseStudyDocument | null>(previewItem ?? null);
+	const [loading, setLoading] = useState(!previewItem);
 	const [loadError, setLoadError] = useState(false);
+	const pageDescription = item?.task || item?.description || "Результаты и подробности проекта CONTENT PORT.";
+	usePageMetadata({
+		title: item ? `${item.title} — кейс CONTENT PORT` : "Кейс — CONTENT PORT",
+		description: pageDescription.length > 160 ? `${pageDescription.slice(0, 157).trimEnd()}...` : pageDescription,
+		image: item?.thumbnailUrl,
+		type: "article",
+	});
 
 	useEffect(() => {
+		if (previewItem) {
+			setItem(previewItem);
+			setLoading(false);
+			return;
+		}
+
 		let active = true;
 		sanityClient
 			.fetch<CaseStudyDocument | null>(
@@ -537,7 +631,6 @@ export function CaseDetailsPage({ slug }: { slug: string }) {
 					category,
 					task,
 					metricValue,
-					metricLabel,
 					growthFrom,
 					growthTo,
 					description,
@@ -546,7 +639,7 @@ export function CaseDetailsPage({ slug }: { slug: string }) {
 					workDone,
 					conclusion,
 					details,
-					resultStats[] { label, value },
+					resultStats[] { metricType, customLabel, label, value },
 					"thumbnailUrl": thumbnail.asset->url,
 					contentExamples[] { title, url, "imageUrl": image.asset->url },
 					"statisticsScreenshots": statisticsScreenshots[].asset->url,
@@ -572,21 +665,24 @@ export function CaseDetailsPage({ slug }: { slug: string }) {
 		return () => {
 			active = false;
 		};
-	}, [slug]);
+	}, [previewItem, slug]);
 
 	return (
 		<>
+			{previewItem && <PreviewNotice>ПРЕДПРОСМОТР ДЕМО-КЕЙСА — ДАННЫЕ ВЫМЫШЛЕНЫ</PreviewNotice>}
 			<DetailHeader />
-			<UI.Main>
-				{item && <CaseDetailContent item={item} />}
+			<UI.Main id="case-content" tabIndex={-1}>
+				{item && <CaseDetailContent item={item} showFullPreview={Boolean(previewItem)} />}
 				{loading && (
 					<UI.Container>
-						<StateMessage><ErrorText>Загружаем кейс…</ErrorText></StateMessage>
+						<StateMessage role="status" aria-live="polite">
+							<ErrorText>Загружаем кейс…</ErrorText>
+						</StateMessage>
 					</UI.Container>
 				)}
 				{!loading && loadError && (
 					<UI.Container>
-						<StateMessage>
+						<StateMessage role="alert">
 							<DetailCategory>Кейс не найден</DetailCategory>
 							<DetailTitle>Не удалось открыть этот кейс</DetailTitle>
 							<ErrorText>Возможно, ссылка устарела или кейс пока не опубликован.</ErrorText>

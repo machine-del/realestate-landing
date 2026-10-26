@@ -11,10 +11,11 @@ export function useLandingInteractions() {
 			if (!targetId) return;
 			const target = document.getElementById(decodeURIComponent(targetId));
 			if (!target) return;
+			if (target.id === "main-content" || target.id === "case-content") return;
 			event.preventDefault();
 			window.scrollTo({
 				top: target.getBoundingClientRect().top + window.scrollY - 80,
-				behavior: "smooth",
+				behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
 			});
 		};
 		anchors.forEach((anchor) => anchor.addEventListener("click", onAnchorClick));
@@ -106,7 +107,7 @@ export function useLandingInteractions() {
 				heroVisual.style.transform = `translateY(${window.scrollY * 0.08}px)`;
 			}
 		};
-		if (heroVisual && window.innerWidth > 1024) {
+		if (heroVisual && window.innerWidth > 1024 && !reduceMotion) {
 			window.addEventListener("scroll", onHeroParallax, { passive: true });
 			onHeroParallax();
 			cleanup.push(() => window.removeEventListener("scroll", onHeroParallax));

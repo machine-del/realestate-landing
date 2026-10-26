@@ -15,7 +15,7 @@ export interface CaseStudyDocument {
 	workDone?: string;
 	conclusion?: string;
 	details?: string;
-	resultStats?: Array<{ label: string; value: string }>;
+	resultStats?: Array<{ metricType?: string; customLabel?: string; label?: string; value: string }>;
 	thumbnailUrl?: string;
 	contentExamples?: Array<{ title: string; url: string; imageUrl?: string }>;
 	statisticsScreenshots?: string[];

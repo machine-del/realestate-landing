@@ -123,10 +123,67 @@ export const caseStudy = defineType({
         {
           type: 'object',
           fields: [
-            defineField({name: 'label', title: 'Показатель', type: 'string', validation: (rule) => rule.required()}),
+            defineField({
+              name: 'metricType',
+              title: 'Показатель',
+              type: 'string',
+              options: {
+                layout: 'dropdown',
+                list: [
+                  {title: 'Просмотры коротких видео', value: 'Просмотры коротких видео'},
+                  {title: 'Лайки на ролике-лидере', value: 'Лайки на ролике-лидере'},
+                  {title: 'Комментарии на ролике-лидере', value: 'Комментарии на ролике-лидере'},
+                  {title: 'Поделились роликом-лидером', value: 'Поделились роликом-лидером'},
+                  {title: 'Другое', value: 'Другое'},
+                ],
+              },
+              validation: (rule) =>
+                rule.custom((value, context) => {
+                  const parent = context.parent;
+                  const hasLegacyLabel =
+                    parent
+                    && typeof parent === 'object'
+                    && 'label' in parent
+                    && typeof parent.label === 'string'
+                    && parent.label.trim().length > 0;
+                  return value || hasLegacyLabel ? true : 'Выберите показатель'
+                }),
+            }),
+            defineField({
+              name: 'customLabel',
+              title: 'Свой показатель',
+              type: 'string',
+              hidden: ({parent}) => parent?.metricType !== 'Другое',
+              validation: (rule) =>
+                rule.custom((value, context) => {
+                  const parent = context.parent;
+                  if (
+                    parent
+                    && typeof parent === 'object'
+                    && 'metricType' in parent
+                    && parent.metricType === 'Другое'
+                    && (typeof value !== 'string' || !value.trim())
+                  ) {
+                    return 'Укажите название показателя'
+                  }
+                  return true
+                }),
+            }),
+            defineField({
+              name: 'label',
+              title: 'Старое название показателя',
+              type: 'string',
+              hidden: true,
+            }),
             defineField({name: 'value', title: 'Значение', type: 'string', validation: (rule) => rule.required()}),
           ],
-          preview: {select: {title: 'label', subtitle: 'value'}},
+          preview: {
+            select: {title: 'metricType', customLabel: 'customLabel', legacyLabel: 'label', subtitle: 'value'},
+            prepare: ({title, customLabel, legacyLabel, subtitle}) => ({
+              title: title === 'Другое' ? customLabel || 'Другое' : title || legacyLabel || 'Показатель',
+              subtitle,
+            }),
+          },
         },
       ],
     }),

@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "@emotion/styled";
 import * as UI from "../../shared/ui/StyledElements";
 import { TELEGRAM_CONTACT_URL } from "../../shared/telegram";
 
-const NavigationBar = styled(UI.Nav)<{ $scrolled: boolean }>`
+const NavigationBar = styled.header<{ $scrolled: boolean }>`
 	position: fixed;
 	z-index: 100;
 	top: 0;
@@ -14,6 +14,23 @@ const NavigationBar = styled(UI.Nav)<{ $scrolled: boolean }>`
 	background: ${({ $scrolled }) => ($scrolled ? "rgba(10, 10, 10, 0.85)" : "transparent")};
 	backdrop-filter: ${({ $scrolled }) => ($scrolled ? "blur(20px)" : "none")};
 	transition: background 0.4s var(--ease), backdrop-filter 0.4s, border-color 0.4s;
+`;
+
+const SkipLink = styled(UI.Anchor)`
+	position: absolute;
+	top: -64px;
+	left: 12px;
+	z-index: 101;
+	padding: 10px 16px;
+	border-radius: var(--radius-sm);
+	background: var(--gold);
+	color: #0a0a0a;
+	font-weight: 600;
+	text-decoration: none;
+
+	&:focus {
+		top: 12px;
+	}
 `;
 
 const NavInner = styled(UI.Container)`
@@ -116,8 +133,9 @@ const MobileMenu = styled.div<{ $open: boolean }>`
 	overflow-y: auto;
 	padding: 100px 24px 40px;
 	transform: translateY(${({ $open }) => ($open ? "0" : "-100%")});
+	visibility: ${({ $open }) => ($open ? "visible" : "hidden")};
 	background: var(--bg);
-	transition: transform 0.5s var(--ease);
+	transition: transform 0.5s var(--ease), visibility 0s linear ${({ $open }) => ($open ? "0s" : "0.5s")};
 `;
 
 const MobileNavLink = styled(UI.Anchor)`
@@ -145,6 +163,7 @@ const links = [
 export function Navigation() {
 	const [scrolled, setScrolled] = useState(false);
 	const [menuOpen, setMenuOpen] = useState(false);
+	const burgerRef = useRef<HTMLButtonElement>(null);
 
 	useEffect(() => {
 		const onScroll = () => setScrolled(window.scrollY > 40);
@@ -155,6 +174,9 @@ export function Navigation() {
 
 	useEffect(() => {
 		document.body.style.overflow = menuOpen ? "hidden" : "";
+		if (menuOpen) {
+			document.querySelector<HTMLAnchorElement>("#mobile-navigation a")?.focus();
+		}
 		return () => {
 			document.body.style.overflow = "";
 		};
@@ -162,18 +184,27 @@ export function Navigation() {
 
 	return (
 		<>
+			<SkipLink href="#main-content">Перейти к содержимому</SkipLink>
 			<NavigationBar $scrolled={scrolled}>
 				<NavInner>
 					<Logo href="#">CONTENT PORT</Logo>
-					<NavLinks>
+					<NavLinks aria-label="Основная навигация">
 						{links.map(([label, href]) => <NavLink href={href} key={href}>{label}</NavLink>)}
 					</NavLinks>
 					<NavCta href={TELEGRAM_CONTACT_URL} target="_blank" rel="noopener noreferrer">Обсудить проект</NavCta>
 					<Burger
+						ref={burgerRef}
 						type="button"
 						aria-label={menuOpen ? "Закрыть меню" : "Меню"}
 						aria-expanded={menuOpen}
+						aria-controls="mobile-navigation"
 						onClick={() => setMenuOpen((open) => !open)}
+						onKeyDown={(event) => {
+							if (event.key === "Escape" && menuOpen) {
+								setMenuOpen(false);
+								burgerRef.current?.focus();
+							}
+						}}
 					>
 						<BurgerLine $active={menuOpen} $index={0} />
 						<BurgerLine $active={menuOpen} $index={1} />
@@ -181,9 +212,44 @@ export function Navigation() {
 					</Burger>
 				</NavInner>
 			</NavigationBar>
-			<MobileMenu $open={menuOpen} aria-hidden={!menuOpen}>
+			<MobileMenu
+				as="nav"
+				id="mobile-navigation"
+				$open={menuOpen}
+				aria-label="Мобильная навигация"
+				aria-hidden={!menuOpen}
+				onKeyDown={(event) => {
+					if (event.key === "Escape") {
+						setMenuOpen(false);
+						burgerRef.current?.focus();
+						return;
+					}
+					if (event.key !== "Tab") return;
+
+					const menuLinks = event.currentTarget.querySelectorAll<HTMLAnchorElement>("a");
+					const firstLink = menuLinks[0];
+					const lastLink = menuLinks[menuLinks.length - 1];
+					if (event.shiftKey && document.activeElement === firstLink) {
+						event.preventDefault();
+						lastLink?.focus();
+					} else if (!event.shiftKey && document.activeElement === lastLink) {
+						event.preventDefault();
+						firstLink?.focus();
+					}
+				}}
+			>
 				{links.map(([label, href]) => (
-					<MobileNavLink href={href} key={href} onClick={() => setMenuOpen(false)}>{label}</MobileNavLink>
+					<MobileNavLink
+						href={href}
+						key={href}
+						tabIndex={menuOpen ? 0 : -1}
+						onClick={() => {
+							setMenuOpen(false);
+							burgerRef.current?.focus();
+						}}
+					>
+						{label}
+					</MobileNavLink>
 				))}
 			</MobileMenu>
 		</>

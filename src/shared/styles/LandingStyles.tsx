@@ -6,7 +6,7 @@ export const LandingStyles = styled.div`
 	--bg-card: #141414;
 	--text: #ffffff;
 	--text-muted: #8a8a8a;
-	--text-dim: #5a5a5a;
+	--text-dim: #858585;
 	--gold: #c9a96a;
 	--gold-soft: rgba(201, 169, 106, 0.12);
 	--gold-line: rgba(201, 169, 106, 0.25);
@@ -42,7 +42,14 @@ export const LandingStyles = styled.div`
 		color: #000;
 	}
 
-	a {
+	:where(a) {
 		color: inherit;
+	}
+
+	a:focus-visible,
+	button:focus-visible,
+	[role="button"]:focus-visible {
+		outline: 2px solid var(--gold);
+		outline-offset: 3px;
 	}
 `;

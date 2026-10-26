@@ -7,11 +7,6 @@ $projects = @(
         Command = 'npm run dev'
     },
     @{
-        Name = 'Backend'
-        Path = Join-Path $PSScriptRoot 'backend'
-        Command = 'yarn start:dev'
-    },
-    @{
         Name = 'Sanity Studio'
         Path = Join-Path $PSScriptRoot 'sanity-studio'
         Command = 'npm run dev'

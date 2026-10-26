@@ -1,6 +1,9 @@
+import { useEffect, useRef, useState } from "react";
 import styled from "@emotion/styled";
 import * as UI from "../../shared/ui/StyledElements";
 import { TELEGRAM_CONTACT_URL } from "../../shared/telegram";
+import reelVideo from "../../../assets/videos/AQNABOFTMGor31iDbafUdRkvvZvO01CzlQUIsMGouGOn6yizwdfxgQGcfbFX8I_6zpHAxU2iRciTzLEHB2mHrngzzTTfjXSkyExdvP8.mp4";
+import reelPoster from "../../../assets/videos/preview/preview.jpg";
 
 const HeroHeroGrid = styled(UI.Div)`		position: relative;
 		z-index: 1;
@@ -110,21 +113,83 @@ const HeroReelUi = styled(UI.Div)`		position: relative;
 		justify-content: space-between;
 		padding: 24px 16px;
 	`;
-const HeroReelBg = styled(UI.Div)`		position: absolute;
+const HeroReelBg = styled.video`		position: absolute;
 		inset: 0;
-		background:
-			linear-gradient(180deg, rgba(201, 169, 106, 0.15) 0%, transparent 30%, transparent 70%, rgba(0, 0, 0, 0.8) 100%),
-			linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f1a 100%);
-
-		&::after {
-			position: absolute;
-			inset: 0;
-			background-image:
-				radial-gradient(circle at 30% 40%, rgba(201, 169, 106, 0.2) 0%, transparent 40%),
-				radial-gradient(circle at 70% 70%, rgba(120, 80, 200, 0.15) 0%, transparent 40%);
-			content: "";
-		}
+		z-index: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		background: #0f0f1a;
 	`;
+const HeroReelOverlay = styled(UI.Div)`
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	background: linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 35%, transparent 62%, rgba(0, 0, 0, 0.78));
+	pointer-events: none;
+`;
+const HeroReelPreview = styled.img<{ $visible: boolean }>`
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	opacity: ${({ $visible }) => ($visible ? 1 : 0)};
+	pointer-events: none;
+	transition: opacity 450ms ease;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+`;
+const HeroReelSoundButton = styled.button`
+	position: absolute;
+	right: 12px;
+	bottom: 18px;
+	z-index: 3;
+	display: flex;
+	width: 36px;
+	height: 36px;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 1px solid rgba(255, 255, 255, 0.22);
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.58);
+	color: #fff;
+	cursor: pointer;
+	backdrop-filter: blur(8px);
+
+	&:hover,
+	&:focus-visible {
+		border-color: var(--gold);
+		color: var(--gold);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--gold);
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.55;
+	}
+`;
+const HeroReelPlaybackButton = styled(HeroReelSoundButton)`
+	right: auto;
+	left: 12px;
+`;
+const HeroReelSoundIcon = styled(UI.Svg)`
+	width: 18px;
+	height: 18px;
+	fill: none;
+	stroke: currentColor;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	stroke-width: 1.7;
+`;
 const HeroReelTop = styled(UI.Div)`		position: relative;
 		z-index: 1;
 		display: flex;
@@ -201,7 +266,7 @@ const HeroReelText = styled(UI.Div)`		max-width: 80%;
 		font-size: 11px;
 		line-height: 1.4;
 	`;
-const HeroReelProgress = styled(UI.Div)`		position: absolute;
+const HeroReelProgress = styled(UI.Div)<{ $progress: number }>`		position: absolute;
 		right: 16px;
 		bottom: 8px;
 		left: 16px;
@@ -215,10 +280,11 @@ const HeroReelProgress = styled(UI.Div)`		position: absolute;
 			top: 0;
 			bottom: 0;
 			left: 0;
-			width: 40%;
+			width: ${({ $progress }) => `${$progress}%`};
 			border-radius: 2px;
 			background: #fff;
 			content: "";
+			transition: width 100ms linear;
 		}
 	`;
 const HeroHeroFloatCard = styled(UI.Div)`		position: absolute;
@@ -234,11 +300,13 @@ const HeroHeroFloatCard = styled(UI.Div)`		position: absolute;
 			display: none;
 		}
 	`;
-const HeroHeroFloat1 = styled(HeroHeroFloatCard)`		top: 10%;
-		left: 0;
+const HeroHeroFloat1 = styled(HeroHeroFloatCard)`
+		top: 10%;
+		left: -10px;
 		animation-delay: 0.5s;
 	`;
-const HeroHeroFloat2 = styled(HeroHeroFloatCard)`		right: 0;
+const HeroHeroFloat2 = styled(HeroHeroFloatCard)`
+		right: -10px;
 		bottom: 15%;
 		animation-delay: 1.5s;
 	`;
@@ -297,6 +365,61 @@ const HeroSection = styled(UI.Section)`
 `;
 
 export function Hero() {
+	const [showReelPreview, setShowReelPreview] = useState(true);
+	const [isReelStarted, setIsReelStarted] = useState(false);
+	const [isReelPlaying, setIsReelPlaying] = useState(
+		() => !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+	);
+	const [isReelMuted, setIsReelMuted] = useState(true);
+	const [reelProgress, setReelProgress] = useState(0);
+	const reelVideoRef = useRef<HTMLVideoElement>(null);
+
+	useEffect(() => {
+		if (!isReelPlaying) return;
+		const timeout = window.setTimeout(() => {
+			setIsReelStarted(true);
+			setShowReelPreview(false);
+		}, 3000);
+		return () => window.clearTimeout(timeout);
+	}, [isReelPlaying]);
+
+	useEffect(() => {
+		const video = reelVideoRef.current;
+		const visual = document.getElementById("heroVisual");
+		if (!video || !visual) return;
+
+		let isInViewport = false;
+		const updatePlayback = () => {
+			if (!isReelPlaying || !isInViewport || document.visibilityState !== "visible") {
+				video.pause();
+				return;
+			}
+
+			video.play().catch((error: unknown) => {
+				if (error instanceof DOMException && error.name === "AbortError") return;
+				console.error("Could not play the hero reel video.", error);
+			});
+		};
+
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				isInViewport = entry.isIntersecting;
+				updatePlayback();
+			},
+			{ threshold: 0.15 },
+		);
+		const onVisibilityChange = () => updatePlayback();
+
+		observer.observe(visual);
+		document.addEventListener("visibilitychange", onVisibilityChange);
+
+		return () => {
+			observer.disconnect();
+			document.removeEventListener("visibilitychange", onVisibilityChange);
+			video.pause();
+		};
+	}, [isReelPlaying]);
+
 	return (
 		<HeroSection>
 			<UI.Container>
@@ -323,46 +446,110 @@ export function Hero() {
 							<HeroPhoneNotch  />
 							<HeroPhoneScreen>
 								<HeroReelUi>
-									<HeroReelBg  />
+									<HeroReelBg
+										ref={reelVideoRef}
+										muted={isReelMuted}
+										loop
+										playsInline
+										preload="metadata"
+										poster={reelPoster}
+										aria-hidden="true"
+										onTimeUpdate={(event) => {
+											const { currentTime, duration } = event.currentTarget;
+											if (Number.isFinite(duration) && duration > 0) {
+												setReelProgress((currentTime / duration) * 100);
+											}
+										}}
+										onSeeked={(event) => {
+											const { currentTime, duration } = event.currentTarget;
+											if (Number.isFinite(duration) && duration > 0) {
+												setReelProgress((currentTime / duration) * 100);
+											}
+										}}
+									>
+										<source src={reelVideo} type="video/mp4" />
+									</HeroReelBg>
+									<HeroReelOverlay />
+									<HeroReelPreview src={reelPoster} alt="" $visible={showReelPreview} />
 									<HeroReelTop><HeroReelTag>Reels</HeroReelTag></HeroReelTop>
 									<HeroReelSide>
 										<HeroReelStat>
 											<HeroReelIcon>
 												<HeroReelIconSvg viewBox="0 0 24 24"><UI.Path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></HeroReelIconSvg>
 											</HeroReelIcon>
-											<HeroReelCount>12.4K</HeroReelCount>
+											<HeroReelCount>158 тыс.</HeroReelCount>
 										</HeroReelStat>
 										<HeroReelStat>
 											<HeroReelIcon>
 												<HeroReelIconSvg viewBox="0 0 24 24"><UI.Path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></HeroReelIconSvg>
 											</HeroReelIcon>
-											<HeroReelCount>847</HeroReelCount>
+											<HeroReelCount>13 тыс.</HeroReelCount>
 										</HeroReelStat>
 										<HeroReelStat>
 											<HeroReelIcon>
 												<HeroReelIconSvg viewBox="0 0 24 24"><UI.Line x1="22" y1="2" x2="11" y2="13" /><UI.Polygon points="22 2 15 22 11 13 2 9 22 2" /></HeroReelIconSvg>
 											</HeroReelIcon>
-											<HeroReelCount>2.1K</HeroReelCount>
+											<HeroReelCount>161 тыс.</HeroReelCount>
 										</HeroReelStat>
 									</HeroReelSide>
+									{/*
 									<HeroReelBottom>
 										<HeroReelUser>
-											<HeroReelAvatar  />
+											<HeroReelAvatar />
 											<HeroReelName>realestate.expert</HeroReelName>
 										</HeroReelUser>
 										<HeroReelText>Как риелтору получать 100+ заявок в месяц через короткие видео</HeroReelText>
 									</HeroReelBottom>
-									<HeroReelProgress  />
+									*/}
+									<HeroReelPlaybackButton
+										type="button"
+										onClick={() => setIsReelPlaying((playing) => !playing)}
+										aria-label={isReelPlaying ? "Поставить видео на паузу" : "Воспроизвести видео"}
+									>
+										<HeroReelSoundIcon viewBox="0 0 24 24" aria-hidden="true">
+											{isReelPlaying ? (
+												<>
+													<UI.Line x1="8" y1="5" x2="8" y2="19" />
+													<UI.Line x1="16" y1="5" x2="16" y2="19" />
+												</>
+											) : (
+												<UI.Polygon points="7 4 20 12 7 20 7 4" />
+											)}
+										</HeroReelSoundIcon>
+									</HeroReelPlaybackButton>
+									<HeroReelSoundButton
+										type="button"
+										disabled={!isReelStarted}
+										onClick={() => setIsReelMuted((muted) => !muted)}
+										aria-label={isReelMuted ? "Включить звук" : "Выключить звук"}
+										title={!isReelStarted ? "Звук станет доступен после запуска видео" : isReelMuted ? "Включить звук" : "Выключить звук"}
+									>
+										<HeroReelSoundIcon viewBox="0 0 24 24" aria-hidden="true">
+											<UI.Path d="M11 5 6 9H3v6h3l5 4V5Z" />
+											{isReelMuted ? (
+												<>
+													<UI.Line x1="17" y1="9" x2="22" y2="15" />
+													<UI.Line x1="22" y1="9" x2="17" y2="15" />
+												</>
+											) : (
+												<>
+													<UI.Path d="M15.5 8.5a5 5 0 0 1 0 7" />
+													<UI.Path d="M18.5 5.5a9 9 0 0 1 0 13" />
+												</>
+											)}
+										</HeroReelSoundIcon>
+									</HeroReelSoundButton>
+									<HeroReelProgress $progress={reelProgress} />
 								</HeroReelUi>
 							</HeroPhoneScreen>
 						</HeroPhoneMock>
 						<HeroHeroFloat1>
 							<HeroFloatLabel>Просмотры</HeroFloatLabel>
-							<HeroFloatValue>12<HeroAccent>M+</HeroAccent></HeroFloatValue>
+							<HeroFloatValue>10<HeroAccent> млн+</HeroAccent></HeroFloatValue>
 						</HeroHeroFloat1>
 						<HeroHeroFloat2>
 							<HeroFloatLabel>Подписчики</HeroFloatLabel>
-							<HeroFloatValue>31<HeroAccent>K+</HeroAccent></HeroFloatValue>
+							<HeroFloatValue>31,1<HeroAccent> тыс.</HeroAccent></HeroFloatValue>
 						</HeroHeroFloat2>
 					</UI.Reveal>
 				</HeroHeroGrid>

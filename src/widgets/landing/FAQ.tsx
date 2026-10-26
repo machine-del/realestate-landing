@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import styled from "@emotion/styled";
 import * as UI from "../../shared/ui/StyledElements";
 
@@ -120,14 +120,15 @@ function FAQEntry({
 	onToggle: () => void;
 }) {
 	const answerRef = useRef<HTMLDivElement>(null);
+	const answerId = useId();
 
 	return (
 		<UI.Reveal as={FAQItem}>
-			<FAQQuestion type="button" aria-expanded={open} onClick={onToggle}>
+			<FAQQuestion type="button" aria-expanded={open} aria-controls={answerId} onClick={onToggle}>
 				{question}
-				<FAQIcon $open={open} />
+				<FAQIcon $open={open} aria-hidden="true" />
 			</FAQQuestion>
-			<FAQAnswer $open={open} $height={answerRef.current?.scrollHeight ?? 0}>
+			<FAQAnswer id={answerId} $open={open} $height={answerRef.current?.scrollHeight ?? 0} aria-hidden={!open}>
 				<FAQAnswerText ref={answerRef}>{answer}</FAQAnswerText>
 			</FAQAnswer>
 		</UI.Reveal>
