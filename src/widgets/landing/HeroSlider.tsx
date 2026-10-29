@@ -41,60 +41,78 @@ const SectionTitle = styled.h2`
 	line-height: 1.12;
 `;
 
-const SliderFrame = styled.div<{ $image: string }>`
+const SliderFrame = styled.div`
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	height: min(72svh, 760px);
-	min-height: 400px;
+	height: clamp(400px, 56vw, 680px);
 	overflow: hidden;
 	border: 1px solid var(--border);
-	border-radius: 18px;
-	background: #101012;
-
-	&::before {
-		position: absolute;
-		inset: -24px;
-		background-image: url("${({ $image }) => $image}");
-		background-position: center;
-		background-size: cover;
-		filter: blur(28px);
-		opacity: 0.38;
-		transform: scale(1.08);
-		content: "";
-	}
-
-	&::after {
-		position: absolute;
-		inset: 0;
-		background: linear-gradient(180deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.18) 60%, rgba(0, 0, 0, 0.68));
-		content: "";
-		pointer-events: none;
-	}
+	border-radius: 24px;
+	background: #080808;
 
 	@media (max-width: 600px) {
-		height: min(68svh, 600px);
-		min-height: 340px;
+		height: min(72svh, 560px);
+		min-height: 320px;
 		border-radius: 14px;
 	}
 `;
 
-const SlideButton = styled.button`
+const CarouselViewport = styled.div`
 	position: relative;
 	z-index: 1;
-	display: grid;
-	width: 100%;
 	min-height: 0;
 	flex: 1;
+	overflow: hidden;
+	touch-action: pan-y;
+`;
+
+const SlideButton = styled.button<{ $position: "previous" | "active" | "next" }>`
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	z-index: ${({ $position }) => ($position === "active" ? 2 : 1)};
+	display: grid;
+	width: min(58%, 760px);
+	height: calc(100% - 32px);
 	place-items: center;
-	padding: 0;
+	padding: 12px;
+	transform: ${({ $position }) => {
+		if ($position === "previous") return "translate(-50%, -50%) translateX(-76%) scale(0.88)";
+		if ($position === "next") return "translate(-50%, -50%) translateX(76%) scale(0.88)";
+		return "translate(-50%, -50%) scale(1)";
+	}};
 	border: 0;
-	background: transparent;
-	cursor: zoom-in;
+	border-radius: 16px;
+	background: ${({ $position }) => ($position === "active" ? "#080808" : "transparent")};
+	box-shadow: ${({ $position }) => ($position === "active" ? "0 20px 56px rgba(0, 0, 0, 0.42)" : "none")};
+	cursor: ${({ $position }) => ($position === "active" ? "zoom-in" : "pointer")};
+	opacity: ${({ $position }) => ($position === "active" ? 1 : 0.66)};
+	transition: transform 450ms var(--ease), opacity 450ms var(--ease), background 450ms var(--ease), box-shadow 450ms var(--ease);
+
+	&:hover {
+		opacity: ${({ $position }) => ($position === "active" ? 1 : 0.88)};
+	}
 
 	&:focus-visible {
 		outline: 2px solid var(--gold);
-		outline-offset: -3px;
+		outline-offset: -2px;
+	}
+
+	@media (max-width: 600px) {
+		width: 62%;
+		height: calc(100% - 24px);
+		padding: 8px;
+		border-radius: 10px;
+		transform: ${({ $position }) => {
+			if ($position === "previous") return "translate(-50%, -50%) translateX(-78%) scale(0.86)";
+			if ($position === "next") return "translate(-50%, -50%) translateX(78%) scale(0.86)";
+			return "translate(-50%, -50%) scale(1)";
+		}};
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
 	}
 `;
 
@@ -103,11 +121,13 @@ const SlideImage = styled.img`
 	width: auto;
 	height: auto;
 	max-width: 100%;
-	max-height: 60svh;
-	padding: 18px 12px 12px;
+	max-height: min(calc(68svh - 24px), 620px);
 	object-fit: contain;
-	filter: drop-shadow(0 16px 40px rgba(0, 0, 0, 0.48));
-	animation: slide-enter 260ms ease both;
+	animation: slide-enter 420ms ease both;
+
+	@media (max-width: 600px) {
+		max-height: min(calc(68svh - 24px), 480px);
+	}
 
 	@media (prefers-reduced-motion: reduce) {
 		animation: none;
@@ -123,22 +143,6 @@ const SlideImage = styled.img`
 			transform: scale(1);
 		}
 	}
-`;
-
-const Controls = styled.div`
-	position: relative;
-	z-index: 2;
-	display: flex;
-	flex: 0 0 auto;
-	align-items: center;
-	justify-content: center;
-	gap: 8px;
-	margin: 0 auto 16px;
-	padding: 7px;
-	border: 1px solid rgba(255, 255, 255, 0.14);
-	border-radius: var(--radius-pill);
-	background: rgba(13, 13, 14, 0.78);
-	backdrop-filter: blur(14px);
 `;
 
 const ControlButton = styled.button`
@@ -176,38 +180,6 @@ const ControlIcon = styled.svg`
 	stroke-linecap: round;
 	stroke-linejoin: round;
 	stroke-width: 1.8;
-`;
-
-const Dots = styled.div`
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 0 5px;
-`;
-
-const Dot = styled.button<{ $active: boolean }>`
-	display: grid;
-	width: 24px;
-	height: 24px;
-	place-items: center;
-	padding: 0;
-	border: 0;
-	background: transparent;
-	cursor: pointer;
-
-	&:focus-visible {
-		outline: 2px solid var(--text);
-		outline-offset: 0;
-	}
-
-	&::before {
-		width: ${({ $active }) => ($active ? "20px" : "8px")};
-		height: 8px;
-		border-radius: var(--radius-pill);
-		background: ${({ $active }) => ($active ? "var(--gold)" : "rgba(255, 255, 255, 0.38)")};
-		content: "";
-		transition: width 180ms ease, background 180ms ease;
-	}
 `;
 
 const FullscreenOverlay = styled.div`
@@ -284,14 +256,13 @@ const FullscreenControlsBar = styled.div`
 export function HeroSlider() {
 	const [activeIndex, setActiveIndex] = useState(0);
 	const [isFullscreen, setIsFullscreen] = useState(false);
-	const [isPaused, setIsPaused] = useState(
-		() => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-	);
+	const [isPaused, setIsPaused] = useState(false);
 	const slideButtonRef = useRef<HTMLButtonElement>(null);
 	const closeButtonRef = useRef<HTMLButtonElement>(null);
 
 	useEffect(() => {
 		const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+		setIsPaused(motionPreference.matches);
 		const onMotionPreferenceChange = (event: MediaQueryListEvent) => setIsPaused(event.matches);
 		motionPreference.addEventListener("change", onMotionPreferenceChange);
 		return () => motionPreference.removeEventListener("change", onMotionPreferenceChange);
@@ -357,59 +328,36 @@ export function HeroSlider() {
 					<SectionEyebrow>Реальные результаты</SectionEyebrow>
 					<SectionTitle>Цифры, за которыми стоит работа</SectionTitle>
 				</SectionHeading>
-				<SliderFrame $image={slides[activeIndex]}>
-					<SlideButton
-						ref={slideButtonRef}
-						type="button"
-						onClick={() => setIsFullscreen(true)}
-						aria-label={`Открыть изображение ${activeIndex + 1} на весь экран`}
-					>
-						<SlideImage
-							key={slides[activeIndex]}
-							src={slides[activeIndex]}
-							alt={`Пример работы ${activeIndex + 1}`}
-						/>
-					</SlideButton>
-					<Controls>
-						<ControlButton
-							type="button"
-							onClick={() => setIsPaused((paused) => !paused)}
-							aria-label={isPaused ? "Включить автопрокрутку" : "Остановить автопрокрутку"}
-						>
-							<ControlIcon viewBox="0 0 24 24" aria-hidden="true">
-								{isPaused ? (
-									<path d="m8 5 11 7-11 7V5Z" />
-								) : (
-									<>
-										<path d="M8 5v14" />
-										<path d="M16 5v14" />
-									</>
-								)}
-							</ControlIcon>
-						</ControlButton>
-						<ControlButton type="button" onClick={() => goTo(-1)} aria-label="Предыдущее изображение">
-							<ControlIcon viewBox="0 0 24 24" aria-hidden="true">
-								<path d="M19 12H5m0 0 6 6m-6-6 6-6" />
-							</ControlIcon>
-						</ControlButton>
-						<Dots role="group" aria-label="Выбрать изображение">
-							{slides.map((_, index) => (
-								<Dot
+				<SliderFrame>
+					<CarouselViewport aria-live={isPaused ? "polite" : "off"}>
+						{([-1, 0, 1] as const).map((offset) => {
+							const index = (activeIndex + offset + slides.length) % slides.length;
+							const position = offset === -1 ? "previous" : offset === 1 ? "next" : "active";
+							return (
+								<SlideButton
 									key={slides[index]}
+									ref={position === "active" ? slideButtonRef : undefined}
 									type="button"
-									$active={index === activeIndex}
-									onClick={() => setActiveIndex(index)}
-									aria-label={`Изображение ${index + 1}`}
-									aria-pressed={index === activeIndex}
-								/>
-							))}
-						</Dots>
-						<ControlButton type="button" onClick={() => goTo(1)} aria-label="Следующее изображение">
-							<ControlIcon viewBox="0 0 24 24" aria-hidden="true">
-								<path d="M5 12h14m0 0-6-6m6 6-6 6" />
-							</ControlIcon>
-						</ControlButton>
-					</Controls>
+									$position={position}
+									onClick={() => {
+										if (position === "active") setIsFullscreen(true);
+										else setActiveIndex(index);
+									}}
+									aria-label={
+										position === "active"
+											? `Открыть изображение ${index + 1} на весь экран`
+											: `Показать изображение ${index + 1}`
+									}
+									tabIndex={position === "active" ? 0 : -1}
+								>
+									<SlideImage
+										src={slides[index]}
+										alt={`Пример работы ${index + 1}`}
+									/>
+								</SlideButton>
+							);
+						})}
+					</CarouselViewport>
 				</SliderFrame>
 			</UI.Container>
 			{isFullscreen && (

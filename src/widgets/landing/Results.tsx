@@ -1,5 +1,6 @@
 import styled from "@emotion/styled";
 import * as UI from "../../shared/ui/StyledElements";
+import { TELEGRAM_CONTACT_URL } from "../../shared/telegram";
 
 const Section = styled.section`
 	position: relative;
@@ -87,7 +88,7 @@ const Value = styled.div`
 
 const ItemLabel = styled.div`
 	color: var(--text-muted);
-	font-size: 13px;
+	font-size: 15px;
 	line-height: 1.4;
 `;
 
@@ -95,14 +96,14 @@ const Note = styled.p`
 	max-width: 640px;
 	margin: 32px 0 0;
 	color: var(--text-dim);
-	font-size: 15px;
+	font-size: 17px;
 `;
 
 const results = [
-	["12+ млн", "просмотров"],
-	["31 000+", "подписчиков"],
-	["Миллионы", "просмотров на проектах клиентов"],
-	["4+ года", "в создании Reels"],
+	["1+ млрд", "просмотров"],
+	["2+ млн", "подписчиков"],
+	[">30", "довольных клиентов"],
+	["5 лет", "в создании Reels"],
 ];
 
 export function Results() {
@@ -111,7 +112,7 @@ export function Results() {
 			<Container>
 				<UI.Reveal as={Label}>Результаты</UI.Reveal>
 				<UI.Reveal as={Title}>
-					Контент должен работать <Muted>не только на просмотры</Muted>
+					Контент, который выводит <Muted>экспертов на новый уровень</Muted>
 				</UI.Reveal>
 				<UI.Reveal as={Grid}>
 					{results.map(([value, label]) => (
@@ -122,8 +123,11 @@ export function Results() {
 					))}
 				</UI.Reveal>
 				<UI.Reveal as={Note}>
-					Мы строим контент вокруг бизнес-задач: внимание → доверие → аудитория → заявки.
+					Тебе нужны не ролики. Тебе нужна система привлечения клиентов через контент.
 				</UI.Reveal>
+				<UI.LargeOutlineLink href="#cases" style={{ marginTop: '32px' }}>
+					Посмотреть кейсы
+				</UI.LargeOutlineLink>
 			</Container>
 		</Section>
 	);

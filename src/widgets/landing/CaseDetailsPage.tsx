@@ -601,9 +601,18 @@ function CaseDetailContent({ item, showFullPreview }: { item: CaseStudyDocument;
 	);
 }
 
-export function CaseDetailsPage({ slug, previewItem }: { slug: string; previewItem?: CaseStudyDocument }) {
-	const [item, setItem] = useState<CaseStudyDocument | null>(previewItem ?? null);
-	const [loading, setLoading] = useState(!previewItem);
+export function CaseDetailsPage({
+	slug,
+	previewItem,
+	initialItem,
+}: {
+	slug: string;
+	previewItem?: CaseStudyDocument;
+	initialItem?: CaseStudyDocument;
+}) {
+	const initialDocument = previewItem ?? initialItem;
+	const [item, setItem] = useState<CaseStudyDocument | null>(initialDocument ?? null);
+	const [loading, setLoading] = useState(!initialDocument);
 	const [loadError, setLoadError] = useState(false);
 	const pageDescription = item?.task || item?.description || "Результаты и подробности проекта CONTENT PORT.";
 	usePageMetadata({
@@ -614,8 +623,8 @@ export function CaseDetailsPage({ slug, previewItem }: { slug: string; previewIt
 	});
 
 	useEffect(() => {
-		if (previewItem) {
-			setItem(previewItem);
+		if (initialDocument) {
+			setItem(initialDocument);
 			setLoading(false);
 			return;
 		}
@@ -665,7 +674,7 @@ export function CaseDetailsPage({ slug, previewItem }: { slug: string; previewIt
 		return () => {
 			active = false;
 		};
-	}, [previewItem, slug]);
+	}, [initialDocument, slug]);
 
 	return (
 		<>

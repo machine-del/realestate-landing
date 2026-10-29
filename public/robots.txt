@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://realestate-landing-git-main-machine-dels-projects.vercel.app/sitemap.xml
+Sitemap: https://realestate-landing-cyan-gamma.vercel.app/sitemap.xml

@@ -63,8 +63,8 @@ export function WhyUs() {
 			<UI.Container>
 				<UI.Reveal as={UI.SectionLabel}>Почему мы</UI.Reveal>
 				<UI.Reveal as={UI.SectionTitle}>
-					Мы понимаем не только контент.<UI.Break />
-					<UI.MutedText>Мы понимаем бизнес.</UI.MutedText>
+					Мы не просто умеем создавать контент —
+					<UI.MutedText> мы сами 3 года работаем в нише недвижимости.</UI.MutedText>
 				</UI.Reveal>
 				<WhyGrid>
 					{reasons.map((reason, index) => (

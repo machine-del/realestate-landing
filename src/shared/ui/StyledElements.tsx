@@ -174,9 +174,9 @@ export const AccentText = styled.span`
 	color: var(--gold);
 `;
 
-const RevealElement = styled.div<{ $visible: boolean }>`
-	opacity: ${({ $visible }) => ($visible ? 1 : 0)};
-	transform: ${({ $visible }) => ($visible ? "translateY(0)" : "translateY(40px)")};
+const RevealElement = styled.div<{ $visible: boolean; $observed: boolean }>`
+	opacity: ${({ $visible, $observed }) => (!$observed || $visible ? 1 : 0)};
+	transform: ${({ $visible, $observed }) => (!$observed || $visible ? "translateY(0)" : "translateY(40px)")};
 	transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
 
 	@media (prefers-reduced-motion: reduce) {
@@ -195,11 +195,14 @@ interface RevealProps {
 export function Reveal({ as = "div", children, id: suppliedId }: RevealProps) {
 	const generatedId = useId().replace(/:/g, "");
 	const id = suppliedId ?? `reveal-${generatedId}`;
-	const [visible, setVisible] = useState(
-		() => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-	);
+	const [visible, setVisible] = useState(false);
+	const [observed, setObserved] = useState(false);
 
 	useEffect(() => {
+		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+			setVisible(true);
+			return;
+		}
 		if (visible) return;
 		const element = document.getElementById(id);
 		if (!element) return;
@@ -211,12 +214,19 @@ export function Reveal({ as = "div", children, id: suppliedId }: RevealProps) {
 			},
 			{ threshold: 0.12, rootMargin: "0px 0px -60px 0px" },
 		);
+		setObserved(true);
 		observer.observe(element);
 		return () => observer.disconnect();
 	}, [id, visible]);
 
 	return (
-		<RevealElement as={as} id={id} $visible={visible} onFocusCapture={() => setVisible(true)}>
+		<RevealElement
+			as={as}
+			id={id}
+			$visible={visible}
+			$observed={observed}
+			onFocusCapture={() => setVisible(true)}
+		>
 			{children}
 		</RevealElement>
 	);

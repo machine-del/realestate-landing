@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/cases/:slug",
+      "destination": "/cases/:slug/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

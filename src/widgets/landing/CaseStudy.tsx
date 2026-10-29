@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import styled from "@emotion/styled";
 import * as UI from "../../shared/ui/StyledElements";
 import { sanityClient } from "../../shared/sanity/client";
+import { caseStudiesQuery } from "../../shared/sanity/caseStudies";
 import type { CaseStudyDocument } from "../../shared/sanity/types";
 
 const CaseStudyCaseList = styled.div`
@@ -241,43 +242,16 @@ const CaseLoadError = styled(UI.Paragraph)`
 	font-size: 13px;
 `;
 
-function caseStudyQuery() {
-	return `*[_type == "caseStudy" && !(_id in path("drafts.**"))] | order(order asc, _createdAt desc) {
-		_id,
-		"slug": slug.current,
-		title,
-		clientName,
-		category,
-		task,
-		metricValue,
-		metricLabel,
-		growthFrom,
-		growthTo,
-		description,
-		initialSituation,
-		strategy,
-		workDone,
-		conclusion,
-		details,
-		resultStats[] { metricType, customLabel, label, value },
-		"thumbnailUrl": thumbnail.asset->url,
-		contentExamples[] { title, url, "imageUrl": image.asset->url },
-		"statisticsScreenshots": statisticsScreenshots[].asset->url,
-		testimonial,
-		"testimonialImages": testimonialImages[].asset->url,
-		order
-	}`;
-}
-
-export function CaseStudy() {
-	const [caseStudies, setCaseStudies] = useState<CaseStudyDocument[]>([]);
+export function CaseStudy({ initialCaseStudies }: { initialCaseStudies?: CaseStudyDocument[] }) {
+	const [caseStudies, setCaseStudies] = useState<CaseStudyDocument[]>(initialCaseStudies ?? []);
 	const [loadError, setLoadError] = useState(false);
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(initialCaseStudies === undefined);
 
 	useEffect(() => {
+		if (initialCaseStudies !== undefined) return;
 		let active = true;
 		sanityClient
-			.fetch<CaseStudyDocument[]>(caseStudyQuery())
+			.fetch<CaseStudyDocument[]>(caseStudiesQuery)
 			.then((documents) => {
 				if (!active) return;
 				setCaseStudies(documents);
@@ -294,15 +268,15 @@ export function CaseStudy() {
 		return () => {
 			active = false;
 		};
-	}, []);
+	}, [initialCaseStudies]);
 
 	return (
 		<UI.Section id="cases">
 			<UI.Container>
 				<UI.Reveal as={UI.SectionLabel}>Кейсы</UI.Reveal>
 				<UI.Reveal as={UI.SectionTitle}>
-					Не обещаем вирусность.<UI.Break />
-					<UI.MutedText>Показываем, что уже сделали.</UI.MutedText>
+					Наш результат говорит
+					<UI.MutedText> сам за себя.</UI.MutedText>
 				</UI.Reveal>
 				<CaseStudyCaseList>
 					{caseStudies.map((item) => (
@@ -343,7 +317,7 @@ export function CaseStudy() {
 									</CaseGrowth>
 								)}
 								<CaseActions>
-									<CaseAction href={`/cases/${encodeURIComponent(item.slug || item._id)}`}>
+									<CaseAction href={`/cases/${encodeURIComponent(item.slug || item._id)}/`}>
 										Подробнее
 									</CaseAction>
 								</CaseActions>

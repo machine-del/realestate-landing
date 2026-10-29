@@ -21,7 +21,7 @@ export function usePageMetadata({ title, description, image, type = "website" }:
 	useEffect(() => {
 		const siteUrl = (
 			import.meta.env.VITE_SITE_URL
-			|| "https://realestate-landing-git-main-machine-dels-projects.vercel.app"
+			|| "https://realestate-landing-cyan-gamma.vercel.app"
 		).replace(/\/+$/, "");
 		const canonicalUrl = `${siteUrl}${window.location.pathname}`;
 		document.title = title;

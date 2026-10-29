@@ -1,11 +1,11 @@
 {
-  "name": "vertex-landing",
+  "name": "content-port",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/prerender.mjs",
     "preview": "vite preview",
     "studio": "npm --prefix sanity-studio run dev",
     "studio:build": "npm --prefix sanity-studio run build",

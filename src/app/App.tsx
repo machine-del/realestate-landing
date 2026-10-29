@@ -11,15 +11,20 @@ import { Navigation } from '../widgets/navigation/Navigation';
 import { CaseDetailsPage } from '../widgets/landing/CaseDetailsPage';
 import { usePageMetadata } from '../shared/usePageMetadata';
 import { mockCaseStudy } from '../shared/sanity/mockCaseStudy';
+import type { CaseStudyDocument } from '../shared/sanity/types';
+import { getSiteData } from '../shared/siteData';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../shared/seo';
 
-const casePageMatch = window.location.pathname.match(/^\/cases\/([^/]+)\/?$/);
-const caseSlug = casePageMatch ? decodeURIComponent(casePageMatch[1]) : null;
-const isCasePreview = import.meta.env.DEV && caseSlug === 'mock-preview';
+interface AppProps {
+	pathname?: string;
+	initialCaseStudies?: CaseStudyDocument[];
+	initialCase?: CaseStudyDocument;
+}
 
 function LandingPageMetadata() {
 	usePageMetadata({
-		title: 'CONTENT PORT — контент и маркетинг для рынка недвижимости',
-		description: 'CONTENT PORT — стратегия, сценарии, съёмка и монтаж коротких видео для риелторов, агентств недвижимости и экспертов.',
+		title: SITE_TITLE,
+		description: SITE_DESCRIPTION,
 	});
 	return null;
 }
@@ -54,15 +59,26 @@ function GlobalStyles() {
 	);
 }
 
-export function App() {
+export function App({
+	pathname = typeof window === 'undefined' ? '/' : window.location.pathname,
+	initialCaseStudies = getSiteData().caseStudies,
+	initialCase = getSiteData().caseStudy,
+}: AppProps = {}) {
 	useLandingInteractions();
+	const casePageMatch = pathname.match(/^\/cases\/([^/]+)\/?$/);
+	const caseSlug = casePageMatch ? decodeURIComponent(casePageMatch[1]) : null;
+	const isCasePreview = import.meta.env.DEV && caseSlug === 'mock-preview';
 
 	return (
 		<>
 			<GlobalStyles />
 			<LandingStyles>
 				{caseSlug ? (
-					<CaseDetailsPage slug={caseSlug} previewItem={isCasePreview ? mockCaseStudy : undefined} />
+					<CaseDetailsPage
+						slug={caseSlug}
+						previewItem={isCasePreview ? mockCaseStudy : undefined}
+						initialItem={initialCase}
+					/>
 				) : (
 					<>
 						<LandingPageMetadata />
@@ -71,7 +87,7 @@ export function App() {
 							<Hero />
 							<HeroSlider />
 							<Results />
-							<Sections />
+							<Sections initialCaseStudies={initialCaseStudies} />
 						</UI.Main>
 						<Footer />
 					</>

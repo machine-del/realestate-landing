@@ -7,8 +7,9 @@ import { Problem } from "./Problem";
 import { Process } from "./Process";
 import { Services } from "./Services";
 import { WhyUs } from "./WhyUs";
+import type { CaseStudyDocument } from "../../shared/sanity/types";
 
-export function Sections() {
+export function Sections({ initialCaseStudies }: { initialCaseStudies?: CaseStudyDocument[] }) {
 	return (
 		<>
 			<Problem />
@@ -20,7 +21,7 @@ export function Sections() {
 			/>
 			<Approach />
 			<Services />
-			<CaseStudy />
+			<CaseStudy initialCaseStudies={initialCaseStudies} />
 			<WhyUs />
 			<Process />
 			<PinnedSection

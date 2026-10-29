@@ -367,12 +367,16 @@ const HeroSection = styled(UI.Section)`
 export function Hero() {
 	const [showReelPreview, setShowReelPreview] = useState(true);
 	const [isReelStarted, setIsReelStarted] = useState(false);
-	const [isReelPlaying, setIsReelPlaying] = useState(
-		() => !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-	);
+	const [isReelPlaying, setIsReelPlaying] = useState(true);
 	const [isReelMuted, setIsReelMuted] = useState(true);
 	const [reelProgress, setReelProgress] = useState(0);
 	const reelVideoRef = useRef<HTMLVideoElement>(null);
+
+	useEffect(() => {
+		if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+			setIsReelPlaying(false);
+		}
+	}, []);
 
 	useEffect(() => {
 		if (!isReelPlaying) return;
