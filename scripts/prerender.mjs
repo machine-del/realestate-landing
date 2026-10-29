@@ -8,7 +8,7 @@ import path from "node:path";
 const root = process.cwd();
 const outputDirectory = path.join(root, "dist");
 const env = loadEnv("production", root, "");
-const siteUrl = (env.VITE_SITE_URL || "https://realestate-landing-cyan-gamma.vercel.app").replace(/\/+$/, "");
+const siteUrl = (env.VITE_SITE_URL || "https://content-port.ru").replace(/\/+$/, "");
 const client = createClient({
 	projectId: env.VITE_SANITY_PROJECT_ID || "j2snaqzy",
 	dataset: env.VITE_SANITY_DATASET || "production",
