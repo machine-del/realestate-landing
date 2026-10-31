@@ -623,12 +623,6 @@ export function CaseDetailsPage({
 	});
 
 	useEffect(() => {
-		if (initialDocument) {
-			setItem(initialDocument);
-			setLoading(false);
-			return;
-		}
-
 		let active = true;
 		sanityClient
 			.fetch<CaseStudyDocument | null>(
@@ -640,6 +634,7 @@ export function CaseDetailsPage({
 					category,
 					task,
 					metricValue,
+					metricLabel,
 					growthFrom,
 					growthTo,
 					description,
@@ -660,15 +655,20 @@ export function CaseDetailsPage({
 			)
 			.then((document) => {
 				if (!active) return;
-				if (document) setItem(document);
-				else setLoadError(true);
+				if (document) {
+					setItem(document);
+				} else if (initialDocument) {
+					console.warn(`Published case study "${slug}" was not found in Sanity; keeping the prerendered version.`);
+				} else {
+					setLoadError(true);
+				}
 			})
 			.catch((error: unknown) => {
 				console.error(`Could not load case study "${slug}" from Sanity.`, error);
-				if (active) setLoadError(true);
+				if (active && !initialDocument) setLoadError(true);
 			})
 			.finally(() => {
-				if (active) setLoading(false);
+				if (active && !initialDocument) setLoading(false);
 			});
 
 		return () => {

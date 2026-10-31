@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import styled from "@emotion/styled";
 import * as UI from "../../shared/ui/StyledElements";
+import { sanityClient } from "../../shared/sanity/client";
+import { heroSliderQuery, type HeroSliderImage } from "../../shared/sanity/heroSlider";
 import firstImage from "../../../assets/images/slider/5341358970582538725.jpg";
 import secondImage from "../../../assets/images/slider/5381828682181189511.jpg";
 import thirdImage from "../../../assets/images/slider/5381828682181189512.jpg";
 
-const slides = [firstImage, secondImage, thirdImage];
+const fallbackSlides: HeroSliderImage[] = [
+	{ url: firstImage, alt: "Пример работы 1" },
+	{ url: secondImage, alt: "Пример работы 2" },
+	{ url: thirdImage, alt: "Пример работы 3" },
+];
 
 const SliderSection = styled.section`
 	padding: 28px 0 80px;
@@ -253,12 +259,35 @@ const FullscreenControlsBar = styled.div`
 	}
 `;
 
-export function HeroSlider() {
+export function HeroSlider({ initialSlides }: { initialSlides?: HeroSliderImage[] }) {
 	const [activeIndex, setActiveIndex] = useState(0);
 	const [isFullscreen, setIsFullscreen] = useState(false);
 	const [isPaused, setIsPaused] = useState(false);
+	const [slides, setSlides] = useState(
+		initialSlides?.length ? initialSlides : fallbackSlides,
+	);
 	const slideButtonRef = useRef<HTMLButtonElement>(null);
 	const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+	useEffect(() => {
+		let active = true;
+		sanityClient
+			.fetch<HeroSliderImage[] | null>(heroSliderQuery)
+			.then((images) => {
+				if (active && images?.length) setSlides(images);
+			})
+			.catch((error: unknown) => {
+				console.error("Could not load published slider images from Sanity.", error);
+			});
+
+		return () => {
+			active = false;
+		};
+	}, []);
+
+	useEffect(() => {
+		setActiveIndex((index) => (index < slides.length ? index : 0));
+	}, [slides.length]);
 
 	useEffect(() => {
 		const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -275,7 +304,7 @@ export function HeroSlider() {
 		}, 3000);
 
 		return () => window.clearInterval(interval);
-	}, [isFullscreen, isPaused]);
+	}, [isFullscreen, isPaused, slides.length]);
 
 	useEffect(() => {
 		if (!isFullscreen) return;
@@ -299,7 +328,7 @@ export function HeroSlider() {
 			window.removeEventListener("keydown", onKeyDown);
 			slideButtonRef.current?.focus();
 		};
-	}, [isFullscreen]);
+	}, [isFullscreen, slides.length]);
 
 	const trapDialogFocus = (event: ReactKeyboardEvent<HTMLDivElement>) => {
 		if (event.key !== "Tab") return;
@@ -335,7 +364,7 @@ export function HeroSlider() {
 							const position = offset === -1 ? "previous" : offset === 1 ? "next" : "active";
 							return (
 								<SlideButton
-									key={slides[index]}
+									key={`${index}-${slides[index].url}`}
 									ref={position === "active" ? slideButtonRef : undefined}
 									type="button"
 									$position={position}
@@ -351,8 +380,8 @@ export function HeroSlider() {
 									tabIndex={position === "active" ? 0 : -1}
 								>
 									<SlideImage
-										src={slides[index]}
-										alt={`Пример работы ${index + 1}`}
+										src={slides[index].url}
+										alt={slides[index].alt || `Пример работы ${index + 1}`}
 									/>
 								</SlideButton>
 							);
@@ -375,7 +404,11 @@ export function HeroSlider() {
 							<path d="m6 6 12 12M18 6 6 18" />
 						</ControlIcon>
 					</FullscreenClose>
-					<FullscreenImage key={slides[activeIndex]} src={slides[activeIndex]} alt={`Пример работы ${activeIndex + 1}`} />
+					<FullscreenImage
+						key={slides[activeIndex].url}
+						src={slides[activeIndex].url}
+						alt={slides[activeIndex].alt || `Пример работы ${activeIndex + 1}`}
+					/>
 					<FullscreenControlsBar>
 						<FullscreenControls type="button" onClick={() => goTo(-1)} aria-label="Предыдущее изображение">
 							<ControlIcon viewBox="0 0 24 24" aria-hidden="true">

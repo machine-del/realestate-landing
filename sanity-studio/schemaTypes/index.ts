@@ -1,3 +1,4 @@
 import {caseStudy} from './caseStudy'
+import {heroSlider} from './heroSlider'
 
-export const schemaTypes = [caseStudy]
+export const schemaTypes = [caseStudy, heroSlider]

@@ -1,0 +1,14 @@
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteRule ^studio$ /studio/ [R=301,L]
+	RewriteRule ^static/(.*)$ /studio/static/$1 [L]
+
+	RewriteCond %{REQUEST_FILENAME} -f [OR]
+	RewriteCond %{REQUEST_FILENAME} -d
+	RewriteRule ^ - [L]
+
+	RewriteRule ^studio/ /studio/index.html [L]
+	RewriteRule ^ index.html [L]
+</IfModule>

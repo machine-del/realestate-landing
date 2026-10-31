@@ -1,8 +1,10 @@
 import type { CaseStudyDocument } from "./sanity/types";
+import type { HeroSliderImage } from "./sanity/heroSlider";
 
 export interface SiteData {
 	caseStudies?: CaseStudyDocument[];
 	caseStudy?: CaseStudyDocument;
+	heroSlides?: HeroSliderImage[];
 }
 
 declare global {

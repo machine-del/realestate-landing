@@ -64,12 +64,16 @@ try {
 	});
 
 	try {
-		const [{ App }, { caseStudiesQuery }, { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE }] = await Promise.all([
+		const [{ App }, { caseStudiesQuery }, { heroSliderQuery }, { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE }] = await Promise.all([
 			vite.ssrLoadModule("/src/app/App.tsx"),
 			vite.ssrLoadModule("/src/shared/sanity/caseStudies.ts"),
+			vite.ssrLoadModule("/src/shared/sanity/heroSlider.ts"),
 			vite.ssrLoadModule("/src/shared/seo.ts"),
 		]);
-		const cases = await client.fetch(caseStudiesQuery);
+		const [cases, heroSlides] = await Promise.all([
+			client.fetch(caseStudiesQuery),
+			client.fetch(heroSliderQuery),
+		]);
 		const seenSlugs = new Set();
 		const builtAssetFiles = await readdir(path.join(outputDirectory, "assets"));
 		const template = await readFile(path.join(outputDirectory, "index.html"), "utf8");
@@ -92,7 +96,7 @@ try {
 				outputPath: path.join(outputDirectory, "index.html"),
 				title: SITE_TITLE,
 				description: SITE_DESCRIPTION,
-				data: { caseStudies: cases },
+				data: { caseStudies: cases, heroSlides: heroSlides || undefined },
 				type: "website",
 				jsonLd: {
 					"@context": "https://schema.org",
@@ -156,6 +160,7 @@ try {
 				pathname: page.pathname,
 				initialCaseStudies: page.data.caseStudies,
 				initialCase: page.data.caseStudy,
+				initialHeroSlides: page.data.heroSlides,
 			}));
 			let html = updateMetadata(template, {
 				title: page.title,
@@ -189,7 +194,7 @@ try {
 
 		const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries.join("\n")}\n</urlset>\n`;
 		await writeFile(path.join(outputDirectory, "sitemap.xml"), sitemap);
-		await writeFile(path.join(outputDirectory, "robots.txt"), `User-agent: *\nAllow: /\nSitemap: ${siteUrl}/sitemap.xml\n`);
+		await writeFile(path.join(outputDirectory, "robots.txt"), `User-agent: *\nAllow: /\nDisallow: /studio/\nSitemap: ${siteUrl}/sitemap.xml\n`);
 		console.log(`Generated sitemap with ${pages.length} URLs.`);
 	} finally {
 		await vite.close();

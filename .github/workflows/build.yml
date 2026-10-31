@@ -1,12 +1,23 @@
-name: Build
+name: Build and deploy
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+    branches:
+      - main
   workflow_dispatch:
+  repository_dispatch:
+    types:
+      - sanity_publish
 
 permissions:
   contents: read
+
+concurrency:
+  group: content-port-production
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -19,7 +30,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
           cache: npm
           cache-dependency-path: |
             package-lock.json
@@ -29,16 +40,42 @@ jobs:
         run: npm ci
 
       - name: Install Sanity Studio dependencies
-        run: |
-          cd sanity-studio
-          rm -rf node_modules package-lock.json
-          npm install --no-audit --no-fund
+        run: npm --prefix sanity-studio ci
 
-      - name: Build site
+      - name: Build site, case pages, sitemap and Studio
         run: npm run build
         env:
           VITE_SANITY_PROJECT_ID: ${{ secrets.VITE_SANITY_PROJECT_ID }}
           VITE_SANITY_DATASET: ${{ secrets.VITE_SANITY_DATASET }}
 
-      - name: Build Sanity Studio
-        run: npm run studio:build
+      - name: Save deployable site
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: content-port-dist
+          path: dist/
+          include-hidden-files: true
+          retention-days: 1
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request' && vars.BEGET_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download built site
+        uses: actions/download-artifact@v4
+        with:
+          name: content-port-dist
+          path: dist/
+
+      - name: Upload site to Beget
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.BEGET_FTP_SERVER }}
+          username: ${{ secrets.BEGET_FTP_USERNAME }}
+          password: ${{ secrets.BEGET_FTP_PASSWORD }}
+          protocol: ${{ vars.BEGET_FTP_PROTOCOL || 'ftps' }}
+          server-dir: ${{ secrets.BEGET_FTP_SERVER_DIR }}
+          local-dir: dist/
+          dangerous-clean-slate: false

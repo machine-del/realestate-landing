@@ -248,7 +248,6 @@ export function CaseStudy({ initialCaseStudies }: { initialCaseStudies?: CaseStu
 	const [loading, setLoading] = useState(initialCaseStudies === undefined);
 
 	useEffect(() => {
-		if (initialCaseStudies !== undefined) return;
 		let active = true;
 		sanityClient
 			.fetch<CaseStudyDocument[]>(caseStudiesQuery)

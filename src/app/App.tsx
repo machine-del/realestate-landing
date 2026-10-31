@@ -14,11 +14,13 @@ import { mockCaseStudy } from '../shared/sanity/mockCaseStudy';
 import type { CaseStudyDocument } from '../shared/sanity/types';
 import { getSiteData } from '../shared/siteData';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../shared/seo';
+import type { HeroSliderImage } from '../shared/sanity/heroSlider';
 
 interface AppProps {
 	pathname?: string;
 	initialCaseStudies?: CaseStudyDocument[];
 	initialCase?: CaseStudyDocument;
+	initialHeroSlides?: HeroSliderImage[];
 }
 
 function LandingPageMetadata() {
@@ -63,6 +65,7 @@ export function App({
 	pathname = typeof window === 'undefined' ? '/' : window.location.pathname,
 	initialCaseStudies = getSiteData().caseStudies,
 	initialCase = getSiteData().caseStudy,
+	initialHeroSlides = getSiteData().heroSlides,
 }: AppProps = {}) {
 	useLandingInteractions();
 	const casePageMatch = pathname.match(/^\/cases\/([^/]+)\/?$/);
@@ -85,7 +88,7 @@ export function App({
 						<Navigation />
 						<UI.Main id="main-content" tabIndex={-1}>
 							<Hero />
-							<HeroSlider />
+							<HeroSlider initialSlides={initialHeroSlides} />
 							<Results />
 							<Sections initialCaseStudies={initialCaseStudies} />
 						</UI.Main>
