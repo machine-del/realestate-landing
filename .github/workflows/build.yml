@@ -65,14 +65,12 @@ jobs:
 
     steps:
       - name: Download built site
-        if: vars.BEGET_DEPLOY_ENABLED == 'true'
         uses: actions/download-artifact@v4
         with:
           name: content-port-dist
           path: dist/
 
       - name: Upload site to Beget
-        if: vars.BEGET_DEPLOY_ENABLED == 'true'
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
           server: ${{ secrets.BEGET_FTP_SERVER }}
